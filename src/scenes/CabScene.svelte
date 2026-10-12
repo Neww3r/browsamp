@@ -1,14 +1,16 @@
 <script lang="ts">
   import FilmstripKnob from '../components/controls/FilmstripKnob.svelte';
   import Icon from '../components/Icon.svelte';
-  import { LAYOUT, art } from '../lib/layout';
+  import Backdrop from '../components/Backdrop.svelte';
+  import { overlay } from '../lib/assets.svelte';
+  import { LAYOUT } from '../lib/layout';
   import type { MicType } from '../lib/presets';
   import { CABINETS, activeCabinet, getValue, loadIrFile, moveMic, rig, session, setCab, setValue } from '../lib/rig.svelte';
   import { PARAM } from '../params';
 
   const S = LAYOUT.cab.speaker;
   const PANEL = LAYOUT.cab.panel;
-  const MIC_IMG = ['mic-dynamic.webp', 'mic-ribbon.webp'];
+  const MIC_IMG = ['mic-dynamic', 'mic-ribbon'];
   const MIC_NAME = ['Dynamique', 'Ruban'];
 
   let area: HTMLDivElement | undefined = $state();
@@ -48,7 +50,7 @@
 </script>
 
 <div class="cab" class:dim={!micsActive}>
-  <img class="bg" src={art('cab.webp')} alt="" draggable="false" />
+  <Backdrop name="cab" />
 
   <div class="speaker" bind:this={area} style:left="{S.cx - S.r}px" style:top="{S.cy - S.r}px" style:width="{S.r * 2}px" style:height="{S.r * 2}px">
     {#each rig.cab.mics as m, i (i)}
@@ -59,7 +61,7 @@
           class:drag={dragging === i}
           style:left="{50 + m.x * 50}%"
           style:top="{50 + m.y * 50}%"
-          style:background-image="url({art(MIC_IMG[m.type])})"
+          style:background-image="url({overlay(MIC_IMG[m.type])})"
         ></div>
         <!-- The grab handle sits on the capsule: that point is what the mic "hears". -->
         <button
@@ -134,7 +136,7 @@
               value={getValue(key)}
               onchange={(v) => setValue(key, v)}
               size={58}
-              strip={art('knob-header.webp')}
+              sheet="header"
               x={110 + j * 180}
               y={52}
               labelDy={44}
@@ -156,13 +158,6 @@
   .cab {
     position: absolute;
     inset: 0;
-  }
-  .bg {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    user-select: none;
   }
   .speaker {
     position: absolute;

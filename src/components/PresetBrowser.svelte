@@ -1,6 +1,6 @@
 <script lang="ts">
   import { FACTORY } from '../lib/presets';
-  import { isFactory, loadPreset, presets, removePreset, savePreset, stepPreset } from '../lib/rig.svelte';
+  import { exportPresets, importPresets, isFactory, loadPreset, presets, removePreset, savePreset, stepPreset } from '../lib/rig.svelte';
   import Icon from './Icon.svelte';
 
   let open = $state(false);
@@ -24,6 +24,13 @@
     }
     savePreset(n);
     saving = false;
+  }
+  function onImport(e: Event) {
+    const el = e.target as HTMLInputElement;
+    const file = el.files?.[0];
+    el.value = '';
+    open = false;
+    if (file) void importPresets(file);
   }
 </script>
 
@@ -51,6 +58,10 @@
           </div>
         {/each}
       {/if}
+      <div class="sep"></div>
+      <button class="item tool" onclick={() => { exportPresets('current'); open = false; }}><Icon name="download" size={16} /> Exporter ce preset</button>
+      <button class="item tool" disabled={!presets.user.length} onclick={() => { exportPresets('all'); open = false; }}><Icon name="download" size={16} /> Exporter tous mes presets</button>
+      <label class="item tool"><Icon name="upload" size={16} /> Importer des presets…<input type="file" accept=".json,application/json" hidden onchange={onImport} /></label>
     </div>
   {/if}
 
@@ -71,19 +82,22 @@
 <style>
   .browser {
     position: absolute;
-    left: 520px;
-    top: 20px;
+    left: 50%;
+    top: 26px;
     width: 470px;
+    transform: translateX(-50%);
     display: flex;
     gap: 6px;
+    z-index: 11;
   }
   .arrow,
   .name {
     height: 44px;
     border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.04);
-    color: #d8d0c4;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(12, 11, 10, 0.5);
+    backdrop-filter: blur(8px);
+    color: #e2dbcf;
     cursor: pointer;
   }
   .arrow {
@@ -93,7 +107,22 @@
   }
   .arrow:hover,
   .name:hover {
+    background: rgba(12, 11, 10, 0.72);
+  }
+  .sep {
+    height: 1px;
+    margin: 8px 6px;
     background: rgba(255, 255, 255, 0.08);
+  }
+  .tool {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #c8bfb3;
+  }
+  .tool:disabled {
+    opacity: 0.4;
+    cursor: default;
   }
   .name {
     flex: 1;

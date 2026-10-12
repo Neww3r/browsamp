@@ -2,7 +2,8 @@
   import FilmstripKnob from '../components/controls/FilmstripKnob.svelte';
   import Footswitch from '../components/controls/Footswitch.svelte';
   import Led from '../components/controls/Led.svelte';
-  import { LAYOUT, art } from '../lib/layout';
+  import Backdrop from '../components/Backdrop.svelte';
+  import { LAYOUT } from '../lib/layout';
   import { getValue, rig, setValue, toggleFx } from '../lib/rig.svelte';
   import { PARAM } from '../params';
 
@@ -16,7 +17,7 @@
 </script>
 
 <div class="board">
-  <img class="bg" src={art(`board-${scene}.webp`)} alt="" draggable="false" />
+  <Backdrop name="board-{scene}" />
   {#each pedals as p (p.id)}
     {#each p.knobs as k (k.key)}
       <FilmstripKnob
@@ -24,7 +25,7 @@
         value={getValue(k.key)}
         onchange={(v) => setValue(k.key, v)}
         size={P.knobSize}
-        strip={art('knob-pedal.webp')}
+        sheet="pedal"
         x={p.cx + k.dx}
         y={p.cy + k.dy}
         label={null}
@@ -39,12 +40,5 @@
   .board {
     position: absolute;
     inset: 0;
-  }
-  .bg {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    user-select: none;
   }
 </style>

@@ -60,8 +60,8 @@ def mat_baffle():
 def render_cab(samples=160):
     S = lib.LAYOUT["cab"]["speaker"]
     lib.reset()
-    lib.render_settings(lib.STAGE_W * lib.DPR, lib.STAGE_H * lib.DPR, samples)
-    lib.camera()
+    bpy.context.scene.cycles.samples = samples
+    lib.canvas_camera()
     cx, cz = w(S["cx"], S["cy"])
     R = u(S["r"])
 
@@ -122,7 +122,7 @@ LEAN = math.radians(28)
 
 def render_mic(kind, samples=96):
     lib.reset()
-    lib.render_settings(MIC_W * lib.DPR, MIC_H * lib.DPR, samples, transparent=True)
+    lib.render_settings(MIC_W * lib.SCALE, MIC_H * lib.SCALE, samples, transparent=True)
     cam = lib.camera((lib.STAGE_W / 2, lib.STAGE_H / 2), MIC_W)
     # Frame so that the capsule (world origin) sits TIP_FROM_BOTTOM above the bottom edge.
     cam.location.x = 0

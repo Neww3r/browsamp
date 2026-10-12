@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { LAYOUT, art } from '../../lib/layout';
+  import { overlay } from '../../lib/assets.svelte';
+  import { LAYOUT } from '../../lib/layout';
 
   interface Props {
     on: boolean;
@@ -17,12 +18,11 @@
 
 <button
   class="fs"
-  class:pressed
   style:left="{x - half}px"
   style:top="{y - half}px"
   style:width="{half * 2}px"
   style:height="{half * 2}px"
-  style:background-image="url({art(pressed ? 'footswitch-down.webp' : 'footswitch-up.webp')})"
+  style:background-image="url({overlay(pressed ? 'footswitch-down' : 'footswitch-up')})"
   aria-pressed={on}
   aria-label={label}
   onpointerdown={() => (pressed = true)}
@@ -43,6 +43,6 @@
   }
   .fs:focus-visible {
     outline: 3px solid var(--accent);
-    outline-offset: 4px;
+    outline-offset: -10px;
   }
 </style>

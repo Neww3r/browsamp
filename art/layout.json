@@ -3,21 +3,20 @@
     "w": 1600,
     "h": 1000
   },
+  "canvas": {
+    "x": -320,
+    "y": -200,
+    "w": 2240,
+    "h": 1400
+  },
   "frames": 64,
   "knobStrip": {
     "cols": 8,
     "pad": 1.5
   },
-  "header": {
-    "h": 84
-  },
-  "chain": {
-    "y": 904
-  },
   "amps": [
     {
       "id": "sunset",
-      "name": "Sunset 57",
       "voice": "Clean",
       "head": {
         "x": 170,
@@ -38,7 +37,7 @@
         "h": 228
       },
       "knobSize": 84,
-      "knobStyle": "chicken",
+      "knobStyle": "clean",
       "knobY": 628,
       "knobs": [
         {
@@ -71,18 +70,17 @@
         }
       ],
       "labelDy": 72,
-      "logo": {
-        "x": 800,
-        "y": 419
+      "power": {
+        "x": 1292,
+        "y": 628
       },
       "jewel": {
-        "x": 1300,
+        "x": 1352,
         "y": 628
       }
     },
     {
       "id": "brixton",
-      "name": "Brixton 800",
       "voice": "Crunch",
       "head": {
         "x": 170,
@@ -103,7 +101,7 @@
         "h": 228
       },
       "knobSize": 84,
-      "knobStyle": "goldcap",
+      "knobStyle": "crunch",
       "knobY": 358,
       "knobs": [
         {
@@ -136,9 +134,9 @@
         }
       ],
       "labelDy": 70,
-      "logo": {
-        "x": 800,
-        "y": 594
+      "power": {
+        "x": 1310,
+        "y": 358
       },
       "jewel": {
         "x": 290,
@@ -147,7 +145,6 @@
     },
     {
       "id": "obsidian",
-      "name": "Obsidian",
       "voice": "High-gain",
       "head": {
         "x": 170,
@@ -168,7 +165,7 @@
         "h": 235
       },
       "knobSize": 84,
-      "knobStyle": "knurled",
+      "knobStyle": "highgain",
       "knobY": 633,
       "knobs": [
         {
@@ -201,12 +198,12 @@
         }
       ],
       "labelDy": 70,
-      "logo": {
-        "x": 800,
-        "y": 417
+      "power": {
+        "x": 1282,
+        "y": 633
       },
       "jewel": {
-        "x": 1290,
+        "x": 1352,
         "y": 633
       }
     }
@@ -226,14 +223,14 @@
     },
     "name": {
       "dx": 0,
-      "dy": 18
+      "dy": 24
     }
   },
   "pedals": [
     {
       "id": "comp",
       "scene": "pre",
-      "name": "Squeeze",
+      "name": "Compressor",
       "color": [
         0.06,
         0.16,
@@ -262,13 +259,12 @@
           "dx": 62,
           "dy": -42
         }
-      ],
-      "subtitle": "Compressor"
+      ]
     },
     {
       "id": "od",
       "scene": "pre",
-      "name": "Verdant",
+      "name": "Overdrive",
       "color": [
         0.13,
         0.42,
@@ -292,13 +288,12 @@
           "dx": 0,
           "dy": -50
         }
-      ],
-      "subtitle": "Overdrive"
+      ]
     },
     {
       "id": "delay",
       "scene": "post",
-      "name": "Echo 300",
+      "name": "Delay",
       "color": [
         0.62,
         0.63,
@@ -327,13 +322,12 @@
           "dx": 62,
           "dy": -42
         }
-      ],
-      "subtitle": "Echo delay"
+      ]
     },
     {
       "id": "reverb",
       "scene": "post",
-      "name": "Cathedral",
+      "name": "Reverb",
       "color": [
         0.24,
         0.08,
@@ -362,8 +356,7 @@
           "dx": 62,
           "dy": -42
         }
-      ],
-      "subtitle": "Reverb"
+      ]
     }
   ],
   "cab": {

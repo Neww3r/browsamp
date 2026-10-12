@@ -12,7 +12,6 @@ import wasmUrl from '../wasm/dsp.wasm?url';
 import { AMP_TUNER, AMP_TUNER_MUTE, type ParamDef } from '../params';
 import type { WorkletMessage } from './worklet';
 import { builtinIr, irFromFile } from './ir';
-import { makeTestRiff } from './test-source';
 
 export interface StartOptions {
   inputId?: string;
@@ -248,11 +247,14 @@ export class Engine {
     this.fadeTo(this.convGains[next], 1);
   }
 
+  /** Development builds only: plays the synthetic riff (or a DI file) instead of the input. */
   async startTest(file?: ArrayBuffer): Promise<void> {
-    if (!this.ctx) return;
+    // Statically false in production, so the test riff module is left out of the bundle.
+    if (!import.meta.env.DEV || !this.ctx) return;
     this.stopTest();
     if (file) this.testBuffer = await this.ctx.decodeAudioData(file);
-    this.testBuffer ??= makeTestRiff(this.ctx);
+    // Loaded on demand: the test riff only exists in development builds.
+    this.testBuffer ??= (await import('./test-source')).makeTestRiff(this.ctx);
     const src = new AudioBufferSourceNode(this.ctx, { buffer: this.testBuffer, loop: true });
     src.connect(this.testGain);
     src.start();

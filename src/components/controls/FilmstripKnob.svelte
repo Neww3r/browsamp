@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { overlay } from '../../lib/assets.svelte';
   import { LAYOUT } from '../../lib/layout';
   import { fromNorm, toNorm, type ParamDef } from '../../params';
 
@@ -8,17 +9,19 @@
     onchange: (v: number) => void;
     /** Diameter in stage pixels. */
     size: number;
-    /** Sprite sheet of LAYOUT.frames frames in a grid, frame 0 = minimum, row by row. */
-    strip: string;
+    /** Knob style name: art/knob-{name}@{k}.webp, LAYOUT.frames frames in a grid, frame 0 = minimum. */
+    sheet: string;
     /** Centre position in stage pixels (the parent is the stage-sized scene). */
     x: number;
     y: number;
     label?: string | null;
     labelDy?: number;
     labelClass?: string;
+    /** Show the value under the knob permanently (global controls) instead of on hover. */
+    showValue?: boolean;
   }
 
-  let { def, value, onchange, size, strip, x, y, label = def.label, labelDy, labelClass = '' }: Props = $props();
+  let { def, value, onchange, size, sheet, x, y, label = def.label, labelDy, labelClass = '', showValue = false }: Props = $props();
 
   const DRAG_PX = 240; // screen pixels for a full sweep
   let dragging = $state(false);
@@ -93,7 +96,7 @@
   style:top="{y - box / 2}px"
   style:width="{box}px"
   style:height="{box}px"
-  style:background-image="url({strip})"
+  style:background-image="url({overlay(`knob-${sheet}`)})"
   style:background-size="{cols * 100}% {rows * 100}%"
   style:background-position="{((frame % cols) / (cols - 1)) * 100}% {(Math.floor(frame / cols) / (rows - 1)) * 100}%"
   role="slider"
@@ -113,7 +116,9 @@
   onwheel={wheel}
   onkeydown={key}
 ></div>
-{#if dragging || hovering}
+{#if showValue}
+  <div class="value" class:active={dragging || hovering} style:left="{x}px" style:top="{y + size / 2 + 8}px">{text}</div>
+{:else if dragging || hovering}
   <div class="tip" style:left="{x}px" style:top="{y - size / 2 - 10}px">{text}</div>
 {/if}
 {#if label}
@@ -145,6 +150,19 @@
     white-space: nowrap;
     pointer-events: none;
     z-index: 5;
+  }
+  .value {
+    position: absolute;
+    transform: translateX(-50%);
+    color: #d9d2c6;
+    font: 600 14px/1 var(--ui-font);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    pointer-events: none;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  }
+  .value.active {
+    color: var(--accent);
   }
   .label {
     position: absolute;

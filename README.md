@@ -12,7 +12,7 @@ npm install
 npm run dev
 ```
 
-Ouvrir l'URL affichée dans **Chrome** (meilleure latence et `setSinkId` pour choisir la sortie). Le bouton **Démarrer** du bandeau ouvre l'entrée audio ; la roue dentée donne accès au choix de l'interface, du canal et de la sortie. Sans guitare, **Signal de test** (en bas à gauche) joue une boucle synthétique ; **DI…** dans les réglages charge un enregistrement de guitare directe.
+Ouvrir l'URL affichée dans **Chrome**. On allume l'ampli avec son interrupteur **POWER** (ce qui ouvre l'entrée audio) ; la roue crantée en haut à droite donne accès au choix de l'interface, du canal et de la sortie, et à la mesure de latence. En développement (`npm run dev`) seulement, un panneau « dev » en bas à gauche joue un riff synthétique ou un enregistrement DI à la place de la guitare : il n'existe pas dans le build de production.
 
 - `npm test` : tests du DSP (filtres, aliasing, tonestack, accordeur, stabilité, budget CPU)
 - `npm run build` : build de production dans `dist/` (servir en HTTPS ou sur `localhost`, sinon le navigateur refuse l'accès à l'entrée audio)
@@ -27,12 +27,13 @@ Déploiement sur Kazibo : la VM NixOS sert le build publié en asset de release 
 
 ## Interface
 
-Svelte 5, une scène fixe de 1600×1000 mise à l'échelle de la fenêtre, à la manière d'un plugin : bandeau (entrée, gate, accordeur, presets, sortie), une scène par module (Pre-FX, Ampli, Baffle, Post-FX), barre de chaîne du signal en bas pour naviguer. Chaque ampli garde ses propres réglages.
+Svelte 5. L'application occupe toute la fenêtre : la scène utile (1600×1000) est mise à l'échelle pour tenir dans la fenêtre, et les rendus débordent largement autour (2240×1400) pour remplir n'importe quel format d'écran. Les commandes flottent sur le rendu : entrée, gate et sortie en haut (valeur sous le potard, vu-mètre à côté), presets au centre, accordeur et réglages à droite, navigation en icônes en bas (pédales, ampli, baffle, effets). Chaque ampli garde ses propres réglages ; les presets s'exportent et s'importent en `.json`.
 
 | Fichier | Rôle |
 | --- | --- |
 | `src/lib/rig.svelte.ts` | état de l'application (runes) et actions qui pilotent le moteur audio |
-| `src/lib/presets.ts` | modèle d'état v2, presets d'usine, migration des presets v1 |
+| `src/lib/presets.ts` | modèle d'état, presets d'usine, validation des fichiers importés |
+| `src/lib/assets.svelte.ts` | choix de la résolution des images selon l'échelle et la densité de l'écran |
 | `src/scenes/*.svelte` | les scènes ; les contrôles sont posés en coordonnées de scène |
 | `src/components/controls/FilmstripKnob.svelte` | potard à partir d'une planche d'images rendues |
 | `art/layout.json` | géométrie partagée par l'interface et les rendus Blender |
@@ -42,14 +43,15 @@ Svelte 5, une scène fixe de 1600×1000 mise à l'échelle de la fenêtre, à la
 Les visuels de `public/art/` sont rendus par des scripts, à partir de `art/layout.json` ; ils sont commités, Blender n'est donc nécessaire que pour les modifier.
 
 ```bash
-npm run art                       # tout (une quinzaine de minutes sur un M4)
-npm run art -- amp-brixton        # une cible : amp-<id>, knob-<style>, ou les groupes amps / knobs
+npm run art                       # tout (environ 1 h 30 sur un M4)
+npm run art -- amp-brixton        # une cible : amp-<id>, knob-<style>, board-<pre|post>, cab, footswitch, toggle, mic-<type>
+npm run art -- knobs switches     # ou des groupes : knobs, switches, amps, pedals, cabinet
 npm run art -- --fast knobs       # aperçu rapide, peu d'échantillons
 ```
 
 - `art/textures.py` (Pillow) imprime sérigraphies, graduations et logos avec les polices de l'interface ;
-- `art/blender/` modélise et rend : `lib.py` (scène, lumières, matériaux procéduraux), `knobs.py`, `amps.py` ;
-- `art/build.py` enchaîne le tout et assemble les planches de potards (grille 8×8, ombre portée incluse) en WebP.
+- `art/blender/` modélise et rend : `lib.py` (scène, lumières de studio, matériaux procéduraux), `knobs.py` et `switches.py` (potards et interrupteurs vus légèrement de dessus), `amps.py`, `pedals.py`, `cab.py` ;
+- `art/build.py` enchaîne le tout et produit plusieurs résolutions de chaque image : décors de 2240 à 6720 px de large (choisis par `srcset`), potards et interrupteurs en @1/@2/@3 (choisis selon l'échelle × la densité de l'écran).
 
 Blender est attendu dans `/Applications/Blender.app`. Sans Blender, `python3 art/placeholders.py` complète les images manquantes de `public/art/` par des versions provisoires (même géométrie, mêmes sérigraphies) ; il ne remplace les rendus existants qu'avec `--force`.
 

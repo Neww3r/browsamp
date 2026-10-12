@@ -17,7 +17,10 @@ LAYOUT = json.loads((ART / "layout.json").read_text())
 STAGE_W, STAGE_H = LAYOUT["stage"]["w"], LAYOUT["stage"]["h"]
 TEX = ART / "tex"
 OUT = ART / "out"
-DPR = 2  # rendered pixels per stage pixel
+DPR = 2  # texture pixels per stage pixel (printing, logos)
+SCALE = 3  # rendered pixels per stage pixel: covers 5K screens; smaller variants are derived
+CANVAS = LAYOUT["canvas"]  # backgrounds extend past the 1600x1000 safe area to fill any window
+TILT = 18  # degrees: knobs and switches are seen slightly from above, showing their sides
 
 
 # ---------------------------------------------------------------- scene
@@ -38,6 +41,7 @@ def reset():
         sc.cycles.device = "CPU"
     sc.cycles.use_denoising = True
     sc.cycles.denoiser = "OPENIMAGEDENOISE"
+    gpu_denoise(False)
     sc.cycles.max_bounces = 8
     sc.render.image_settings.file_format = "PNG"
     sc.render.image_settings.color_mode = "RGBA"
@@ -58,6 +62,15 @@ def reset():
     return sc
 
 
+def gpu_denoise(on):
+    """OIDN on the GPU pays off on the 28 MP backgrounds, but its per-render start-up cost
+    dominates on small overlay frames."""
+    try:
+        bpy.context.scene.cycles.denoising_use_gpu = on
+    except AttributeError:
+        pass
+
+
 def render_settings(width_px, height_px, samples=128, transparent=False):
     sc = bpy.context.scene
     sc.render.resolution_x = width_px
@@ -67,7 +80,9 @@ def render_settings(width_px, height_px, samples=128, transparent=False):
     sc.render.film_transparent = transparent
 
 
-def camera(center_px=(STAGE_W / 2, STAGE_H / 2), width_px=STAGE_W):
+def camera(center_px=(STAGE_W / 2, STAGE_H / 2), width_px=STAGE_W, tilt_deg=0.0, aspect=None):
+    """Orthographic camera framing `width_px` stage pixels around `center_px`. With a tilt it
+    looks down at that point from above, still centred on it."""
     cam_data = bpy.data.cameras.new("Camera")
     cam_data.type = "ORTHO"
     cam_data.ortho_scale = width_px / 100
@@ -76,10 +91,19 @@ def camera(center_px=(STAGE_W / 2, STAGE_H / 2), width_px=STAGE_W):
     cam = bpy.data.objects.new("Camera", cam_data)
     bpy.context.collection.objects.link(cam)
     x, z = w(*center_px)
-    cam.location = (x, -40, z)
-    cam.rotation_euler = (math.radians(90), 0, 0)
+    t = math.radians(tilt_deg)
+    cam.location = (x, -40 * math.cos(t), z + 40 * math.sin(t))
+    cam.rotation_euler = (math.radians(90) - t, 0, 0)
     bpy.context.scene.camera = cam
     return cam
+
+
+def canvas_camera():
+    """Camera and resolution for a full scene background on the extended canvas."""
+    c = CANVAS
+    render_settings(c["w"] * SCALE, c["h"] * SCALE, bpy.context.scene.cycles.samples)
+    gpu_denoise(True)
+    return camera((c["x"] + c["w"] / 2, c["y"] + c["h"] / 2), c["w"])
 
 
 def w(px, py):
@@ -146,13 +170,37 @@ def spot(name, location, target, power, angle_deg=50, blend=0.8, color=(1, 1, 1)
     return o
 
 
-def studio(key=3.2, warmth=(1.0, 0.95, 0.88), card=1.4):
+def ceiling(strength=2.5):
+    """Large soft panels above and to the sides, invisible to the camera: they only show up as
+    reflections on metal and glossy plastic, like a photo studio."""
+    for name, loc, rot, size, k in (
+        ("Ceiling", (0, -6, 18), (0, 0, 0), (40, 14), 1.0),
+        ("SideL", (-22, -8, 6), (0, math.radians(90), 0), (10, 30), 0.45),
+        ("SideR", (22, -8, 6), (0, math.radians(-90), 0), (10, 30), 0.35),
+    ):
+        m = M(f"{name}Mat")
+        em = m.node("ShaderNodeEmission")
+        em.inputs["Strength"].default_value = strength * k
+        m.link(em.outputs["Emission"], m.nt.nodes["Material Output"].inputs["Surface"])
+        bpy.ops.mesh.primitive_plane_add(size=1, location=loc, rotation=rot)
+        o = bpy.context.active_object
+        o.name = name
+        o.scale = (*size, 1)
+        o.data.materials.append(m.mat)
+        o.visible_camera = False
+        o.visible_shadow = False
+        o.visible_diffuse = False
+
+
+def studio(key=3.2, warmth=(1.0, 0.95, 0.88), card=1.4, reflections=1.0):
     """Key/fill/top lighting shared by backgrounds and knob filmstrips so they match.
 
     Suns are directional (position-independent); the big soft boxes are far away so that
     reflections in chrome look the same wherever an object sits on the stage.
     """
     reflection_card(card)
+    if reflections:
+        ceiling(2.5 * reflections)
     sun("Key", (0.45, 0.75, -0.6), key, warmth, angle_deg=12)
     sun("Fill", (-0.6, 0.8, -0.1), key * 0.18, (0.85, 0.9, 1.0), angle_deg=30)
     area("Softbox", (-14, -28, 16), (0, 0, 0), 22, 9000, warmth, size_y=8)

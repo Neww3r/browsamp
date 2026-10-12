@@ -89,39 +89,11 @@ def panel_print(amp):
     if spec["frame"]:
         m = 8 * DPR
         d.rounded_rectangle([m, m, img.width - m, img.height - m], radius=6 * DPR, outline=spec["frame"], width=int(2.5 * DPR))
-    if amp["id"] == "brixton":
-        # Power / standby legends next to the toggle switches.
-        f_small = font("oswald", 500, 10)
-        for x, t in ((1268, "STANDBY"), (1338, "POWER")):
-            text_center(d, ((x - p["x"]) * DPR, (amp["knobY"] + amp["labelDy"] - p["y"]) * DPR), t, f_small, spec["ink"], 0.16)
-    if amp["id"] == "sunset":
-        f_small = font("josefin-sans", 600, 10)
-        text_center(d, ((amp["jewel"]["x"] - p["x"]) * DPR, (amp["knobY"] + amp["labelDy"] - p["y"]) * DPR), "PILOT", f_small, spec["ink"], 0.16)
+    # Legend under the power toggle (the toggle itself is an overlay).
+    f_small = font(*spec["font"][:2], 10.5)
+    pw = amp["power"]
+    text_center(d, ((pw["x"] - p["x"]) * DPR, (amp["knobY"] + amp["labelDy"] - p["y"]) * DPR), "POWER", f_small, spec["ink"], spec["tracking"])
     save_rgba(img, f"panel-{amp['id']}.png")
-
-
-LOGOS = {
-    "sunset": dict(text="Sunset", font=("yellowtail", 400, 150), tracking=0, pad=40),
-    "brixton": dict(text="Brixton", font=("kaushan-script", 400, 120), tracking=0, pad=40),
-    "obsidian": dict(text="OBSIDIAN", font=("oswald", 700, 82), tracking=0.42, pad=30),
-}
-
-
-def logo(amp_id):
-    spec = LOGOS[amp_id]
-    f = font(*spec["font"])
-    probe = ImageDraw.Draw(Image.new("L", (1, 1)))
-    l, t, r, b = probe.textbbox((0, 0), spec["text"], font=f, anchor="lt")
-    extra = f.size * spec["tracking"] * (len(spec["text"]) - 1)
-    pad = spec["pad"] * DPR
-    w, h = int(r - l + extra + pad * 2), int(b - t + pad * 2)
-    img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-    text_center(ImageDraw.Draw(img), (w / 2, h / 2), spec["text"], f, (255, 255, 255, 255), spec["tracking"])
-    save_rgba(img, f"logo-{amp_id}.png")
-    # Blurred copy: its alpha is a soft height map that gives the letters bevelled edges.
-    soft = Image.new("RGBA", img.size, (255, 255, 255, 0))
-    soft.putalpha(img.getchannel("A").filter(ImageFilter.GaussianBlur(3 * DPR)))
-    save_rgba(soft, f"logo-{amp_id}-soft.png")
 
 
 def hex_grille(w_px, h_px, cell=13, hole=0.72, name="grille-hex.png"):
@@ -150,30 +122,27 @@ PEDAL_LABELS = {
     "reverbMix": "Mix", "reverbDecay": "Decay", "reverbDamp": "Damping", "reverbPredelay": "Pre-delay",
 }
 
-PEDAL_PRINT = {
-    "comp": dict(ink=(240, 244, 255, 255), name=("oswald", 600, 30, 0.2, True), label=("oswald", 500, 11, 0.16)),
-    "od": dict(ink=(244, 236, 210, 255), name=("kaushan-script", 400, 40, 0.0, False), label=("oswald", 500, 11, 0.16)),
-    "delay": dict(ink=(22, 24, 28, 255), name=("oswald", 600, 30, 0.2, True), label=("oswald", 500, 11, 0.16)),
-    "reverb": dict(ink=(236, 222, 248, 255), name=("yellowtail", 400, 42, 0.0, False), label=("oswald", 500, 11, 0.16)),
+PEDAL_INK = {
+    "comp": (236, 240, 250, 255),
+    "od": (240, 236, 218, 255),
+    "delay": (22, 24, 28, 255),
+    "reverb": (236, 226, 246, 255),
 }
 
 
 def pedal_print(p):
     P = L["pedal"]
-    spec = PEDAL_PRINT[p["id"]]
+    ink = PEDAL_INK[p["id"]]
     w, h = P["w"] * DPR, P["h"] * DPR
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    ink = spec["ink"]
     to = lambda dx, dy: ((P["w"] / 2 + dx) * DPR, (P["h"] / 2 + dy) * DPR)
-    fam, wt, size, track, upper = spec["name"]
-    text_center(d, to(P["name"]["dx"], P["name"]["dy"]), p["name"].upper() if upper else p["name"], font(fam, wt, size), ink, track)
-    text_center(d, to(0, P["name"]["dy"] + 30), p["subtitle"].upper(), font("oswald", 500, 10), ink[:3] + (190,), 0.32)
-    lf = font(*spec["label"][:3])
+    text_center(d, to(P["name"]["dx"], P["name"]["dy"]), p["name"].upper(), font("barlow", 600, 25), ink, 0.12)
+    lf = font("barlow-semi-condensed", 600, 11)
     for k in p["knobs"]:
-        text_center(d, to(k["dx"], k["dy"] - P["knobSize"] / 2 - 11), PEDAL_LABELS[k["key"]].upper(), lf, ink, spec["label"][3])
+        text_center(d, to(k["dx"], k["dy"] - P["knobSize"] / 2 - 11), PEDAL_LABELS[k["key"]].upper(), lf, ink, 0.1)
     m = 14 * DPR
-    d.rounded_rectangle([m, m, w - m, h - m], radius=12 * DPR, outline=ink[:3] + (110,), width=int(1.4 * DPR))
+    d.rounded_rectangle([m, m, w - m, h - m], radius=12 * DPR, outline=ink[:3] + (90,), width=int(1.2 * DPR))
     save_rgba(img, f"pedal-{p['id']}.png")
 
 
@@ -185,7 +154,6 @@ def save_rgba(img, name):
 def main():
     for amp in L["amps"]:
         panel_print(amp)
-        logo(amp["id"])
     hex_grille(1170, 235)
     hex_grille(1230, 600, name="grille-hex-cab.png")
     for p in L["pedals"]:

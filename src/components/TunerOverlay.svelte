@@ -1,7 +1,7 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import { fade } from 'svelte/transition';
-  import { session, setTuner, start, ui } from '../lib/rig.svelte';
+  import { session, setTuner, togglePower, ui } from '../lib/rig.svelte';
   import Icon from './Icon.svelte';
 
   const NAMES = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'];
@@ -72,12 +72,12 @@
   </div>
 
   <div class="readout">
-    {#if note}{freq.toFixed(1)} Hz · {cents >= 0 ? '+' : ''}{cents.toFixed(0)} cents{:else if !session.running}L'audio est arrêté{:else}Jouez une corde à vide{/if}
+    {#if note}{freq.toFixed(1)} Hz · {cents >= 0 ? '+' : ''}{cents.toFixed(0)} cents{:else if !session.running}L'ampli est éteint{:else}Jouez une corde à vide{/if}
   </div>
 
   <div class="actions">
     {#if !session.running}
-      <button class="btn primary" onclick={() => start(true)}>Démarrer l'audio</button>
+      <button class="btn primary" onclick={togglePower}>Allumer l'ampli</button>
     {/if}
     <label class="mute"><input type="checkbox" checked={ui.tunerMute} onchange={(e) => setTuner(true, (e.target as HTMLInputElement).checked)} /> Couper la sortie pendant l'accordage</label>
   </div>
@@ -86,7 +86,7 @@
 <style>
   .tuner {
     position: absolute;
-    inset: 84px 0 96px 0;
+    inset: 0;
     display: flex;
     flex-direction: column;
     align-items: center;

@@ -1,4 +1,4 @@
-import { AMP_KNOBS, PARAMS, isAmpKnob, type AmpKnob } from '../params';
+import { AMP_KNOBS, PARAM, PARAMS, isAmpKnob, type AmpKnob } from '../params';
 
 export type MicType = 0 | 1; // 0 = dynamic, 1 = ribbon
 export type FxId = 'comp' | 'od' | 'delay' | 'reverb';
@@ -54,19 +54,48 @@ export function defaultRig(): RigState {
   };
 }
 
-/** Fills in anything added since a state was saved, and upgrades v1 states. */
+/** Keeps only known parameters with finite numbers, clamped to their range. */
+function cleanValues<T extends Record<string, number>>(defaults: T, input: unknown): T {
+  const out = { ...defaults };
+  if (!input || typeof input !== 'object') return out;
+  for (const [k, v] of Object.entries(input)) {
+    const def = PARAM[k];
+    if (def && k in out && typeof v === 'number' && Number.isFinite(v)) {
+      (out as Record<string, number>)[k] = Math.min(def.max, Math.max(def.min, v));
+    }
+  }
+  return out;
+}
+
+const num = (v: unknown, fallback: number, min: number, max: number) =>
+  typeof v === 'number' && Number.isFinite(v) ? Math.min(max, Math.max(min, v)) : fallback;
+
+/**
+ * Fills in anything added since a state was saved, upgrades v1 states, and rejects anything
+ * malformed (imported files are untrusted): the result is always a valid RigState.
+ */
 export function normalize(input: unknown): RigState {
   const d = defaultRig();
   if (!input || typeof input !== 'object') return d;
   const s = input as Partial<RigState> & { values?: Record<string, number> };
-  if (s.v !== 2) return fromV1(s as unknown as V1State);
+  // v1 states are converted, then cleaned like any v2 state.
+  if (s.v !== 2) return normalize(fromV1(s as unknown as V1State));
+  const cab = (s.cab ?? {}) as Partial<RigState['cab']>;
+  const mics = Array.isArray(cab.mics) ? cab.mics : [];
   return {
-    ...d,
-    ...s,
-    amps: d.amps.map((a, i) => ({ ...a, ...(s.amps?.[i] ?? {}) })),
-    values: { ...d.values, ...(s.values ?? {}) },
-    on: { ...d.on, ...(s.on ?? {}) },
-    cab: { ...d.cab, ...(s.cab ?? {}), mics: (s.cab?.mics ?? d.cab.mics).map((m, i) => ({ ...d.cab.mics[i], ...m })) as [MicState, MicState] },
+    v: 2,
+    model: Math.round(num(s.model, d.model, 0, d.amps.length - 1)),
+    amps: d.amps.map((a, i) => cleanValues(a, Array.isArray(s.amps) ? s.amps[i] : undefined)),
+    values: cleanValues(d.values, s.values),
+    on: Object.fromEntries(Object.entries(d.on).map(([k, v]) => [k, typeof s.on?.[k as FxId] === 'boolean' ? s.on[k as FxId] : v])) as RigState['on'],
+    cab: {
+      mode: cab.mode === 'ir' || cab.mode === 'off' || cab.mode === 'mics' ? cab.mode : d.cab.mode,
+      cabinet: Math.round(num(cab.cabinet, d.cab.cabinet, -1, 2)),
+      mics: d.cab.mics.map((m, i) => {
+        const x = mics[i] as Partial<MicState> | undefined;
+        return { type: x?.type === 1 ? 1 : x?.type === 0 ? 0 : m.type, x: num(x?.x, m.x, -1, 1), y: num(x?.y, m.y, -1, 1) };
+      }) as [MicState, MicState],
+    },
   };
 }
 
@@ -125,7 +154,7 @@ export const FACTORY: Preset[] = [
     r.values.reverbMix = 8;
     r.values.output = -6;
   }),
-  preset('Obsidian Lead', 2, { gain: 8, bass: 5, mid: 6.5, treble: 5.5, master: 5 }, (r) => {
+  preset('High-gain Lead', 2, { gain: 8, bass: 5, mid: 6.5, treble: 5.5, master: 5 }, (r) => {
     r.values.gate = -66;
     r.values.output = -6;
     r.on.delay = true;

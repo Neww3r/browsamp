@@ -7,7 +7,7 @@ import math
 import bpy
 
 import lib
-from lib import box, front_plane, u, w
+from lib import box, front_plane, w
 
 DEPTH = 2.6  # head depth
 RECESS = 0.12  # how far panels and cloth sit behind the front frame
@@ -110,13 +110,6 @@ def panel_plate(amp, mat, print_mat):
     front_plane("Print", x0, z0, x1, z1, RECESS - 0.0305, print_mat)
 
 
-def logo_plane(amp, mat, y):
-    img = bpy.data.images.load(str(lib.TEX / f"logo-{amp['id']}.png"), check_existing=True)
-    wpx, hpx = img.size[0] / lib.DPR, img.size[1] / lib.DPR
-    cx, cz = w(amp["logo"]["x"], amp["logo"]["y"])
-    return front_plane("Logo", cx - u(wpx) / 2, cz - u(hpx) / 2, cx + u(wpx) / 2, cz + u(hpx) / 2, y, mat)
-
-
 def jewel(pos, color, metal, r=0.17):
     x, z = w(pos["x"], pos["y"])
     lib.cylinder("JewelBezel", r * 1.35, 0.08, -0.05, x, z, metal, bevel_w=0.03)
@@ -125,17 +118,6 @@ def jewel(pos, color, metal, r=0.17):
     o.scale = (1, 0.7, 1)
     lib._smooth(o, 80)
     o.data.materials.append(lib.mat_glass_jewel("Jewel", color))
-
-
-def toggle(pos_px, metal, lever):
-    x, z = w(*pos_px)
-    lib.cylinder("Nut", 0.1, 0.06, RECESS - 0.09, x, z, metal, verts=6, bevel_w=0.01)
-    lib.cylinder("Bushing", 0.06, 0.1, RECESS - 0.13, x, z, metal, bevel_w=0.01)
-    bpy.ops.mesh.primitive_cone_add(vertices=32, radius1=0.035, radius2=0.05, depth=0.42, location=(x, RECESS - 0.3, z + 0.08))
-    o = bpy.context.active_object
-    o.rotation_euler = (math.radians(90 - 25), 0, 0)
-    lib._smooth(o, 80)
-    o.data.materials.append(lever)
 
 
 def wall(mat, y=5.0):
@@ -198,7 +180,7 @@ def mat_concrete():
 
 
 def mat_red_cavity():
-    """Back of the Obsidian grille: a red glow, brightest behind the logo."""
+    """Back of the high-gain grille: a red glow, brightest in the middle."""
     m = lib.M("Cavity").set(Base_Color=(0.005, 0.005, 0.005, 1), Roughness=0.6)
     grad = m.node("ShaderNodeTexGradient", gradient_type="SPHERICAL")
     m.link(m.mapping("Object", (0.16, 1, 0.55)), grad.inputs["Vector"])
@@ -220,7 +202,6 @@ def build_sunset(a):
     x0, z0, x1, z1 = rect_world(grille)
     front_plane("Cloth", x0, z0, x1, z1, RECESS - 0.006, cloth)
     piping("ClothPiping", grille, lib.mat_metal("Brass", (0.85, 0.66, 0.36), 0.25), inset=-3, radius=0.018)
-    logo_plane(a, lib.mat_relief("LogoChrome", lib.TEX / "logo-sunset.png", (0.93, 0.88, 0.76), 1.0, 0.12, 1.4), RECESS - 0.06)
     panel_plate(a, chrome, lib.mat_print("PanelInk", lib.TEX / "panel-sunset.png", (0.02, 0.018, 0.015)))
     jewel(a["jewel"], (0.85, 0.06, 0.03), chrome)
     leather = lib.mat_plastic("Leather", (0.09, 0.045, 0.02), 0.5, coat=0.3)
@@ -229,7 +210,7 @@ def build_sunset(a):
     cabinet(tweed, cloth)
     wall(mat_wood_planks())
     lib.studio(key=2.3, warmth=(1.0, 0.9, 0.78))
-    lib.spot("WallPool", (0, -2, 9), (0, 5, 2.5), 9000, 70, 0.9, (1.0, 0.72, 0.42), 1.0)
+    lib.spot("WallPool", (0, -2, 9), (0, 5, 2.5), 9000, 120, 1.0, (1.0, 0.72, 0.42), 1.0)
     lib.area("Rim", (0, 3.5, 5), (0, 0, 1), 6, 1200, (1.0, 0.8, 0.6), size_y=2)
 
 
@@ -245,19 +226,15 @@ def build_brixton(a):
     front_plane("Cloth", x0, z0, x1, z1, RECESS - 0.006, cloth)
     piping("PanelPiping", a["panel"], white)
     piping("ClothPiping", grille, white)
-    logo_plane(a, lib.mat_relief("LogoWhite", lib.TEX / "logo-brixton.png", (0.86, 0.84, 0.78), 0.0, 0.3, 1.6), RECESS - 0.07)
     panel_plate(a, gold, lib.mat_print("PanelInk", lib.TEX / "panel-brixton.png", (0.015, 0.012, 0.008)))
     jewel(a["jewel"], (0.85, 0.05, 0.03), chrome)
-    black = lib.mat_plastic("Lever", (0.02, 0.02, 0.02), 0.3, coat=0.5)
-    for x in (1268, 1338):
-        toggle((x, a["knobY"]), chrome, black)
     corners(a["head"], chrome)
     handle(lib.mat_plastic("Handle", (0.015, 0.015, 0.015), 0.45), chrome)
     feet(lib.mat_plastic("Rubber", (0.02, 0.02, 0.02), 0.8))
     cabinet(tolex, cloth, white)
     wall(mat_brick())
     lib.studio(key=2.6, warmth=(1.0, 0.93, 0.84))
-    lib.spot("WallPool", (0, -1, 9), (0, 5, 2.0), 11000, 60, 0.85, (1.0, 0.68, 0.38), 0.8)
+    lib.spot("WallPool", (0, -1, 9), (0, 5, 2.0), 11000, 120, 1.0, (1.0, 0.68, 0.38), 0.8)
     lib.area("RimL", (-9, 3, 3), (0, 0, 0), 4, 900, (1.0, 0.7, 0.45))
     lib.area("RimR", (9, 3, 3), (0, 0, 0), 4, 900, (1.0, 0.7, 0.45))
 
@@ -274,7 +251,6 @@ def build_obsidian(a):
     t = perforated.image(lib.TEX / "grille-hex.png")
     perforated.to("Alpha", t.outputs["Alpha"])
     front_plane("Grille", x0, z0, x1, z1, RECESS - 0.01, perforated.mat)
-    logo_plane(a, lib.mat_relief("LogoAlu", lib.TEX / "logo-obsidian.png", (0.82, 0.83, 0.86), 1.0, 0.2, 1.2), RECESS - 0.05)
     panel_plate(a, anod, lib.mat_print("PanelInk", lib.TEX / "panel-obsidian.png", (0.75, 0.77, 0.8), 0.3, 0.3))
     px0, pz0, px1, pz1 = rect_world(a["panel"])
     box("Accent", px0 + 0.3, pz1 + 0.07, px1 - 0.3, pz1 + 0.1, -0.012, 0.01, lib.mat_emission("AccentRed", (1.0, 0.08, 0.03), 14))
@@ -287,7 +263,7 @@ def build_obsidian(a):
     cabinet(steel, cab_grille.mat)
     wall(mat_concrete())
     lib.studio(key=2.6, warmth=(0.92, 0.95, 1.0))
-    lib.spot("WallPool", (0, -1, 9), (0, 5, 2.5), 6000, 55, 0.9, (0.55, 0.7, 1.0), 0.8)
+    lib.spot("WallPool", (0, -1, 9), (0, 5, 2.5), 6000, 120, 1.0, (0.55, 0.7, 1.0), 0.8)
     lib.area("RimL", (-9, 3, 2), (0, 0, 0), 4, 1400, (0.4, 0.6, 1.0))
     lib.area("RimR", (9, 3, 2), (0, 0, 0), 4, 1400, (1.0, 0.25, 0.15))
 
@@ -298,7 +274,7 @@ BUILDERS = {"sunset": build_sunset, "brixton": build_brixton, "obsidian": build_
 def render_amp(amp_id, samples=160):
     a = amp_by_id(amp_id)
     lib.reset()
-    lib.render_settings(lib.STAGE_W * lib.DPR, lib.STAGE_H * lib.DPR, samples)
-    lib.camera()
+    bpy.context.scene.cycles.samples = samples
+    lib.canvas_camera()
     BUILDERS[amp_id](a)
     lib.render(lib.OUT / f"amp-{amp_id}.png")

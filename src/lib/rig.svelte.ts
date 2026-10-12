@@ -4,6 +4,7 @@
  */
 
 import { renderMicIr } from '../audio/cab-sim';
+import { view } from './assets.svelte';
 import { Engine, type LatencyInfo } from '../audio/engine';
 import { BUILTIN_CABS } from '../audio/ir';
 import { loadUserIr, saveUserIr, type StoredIr } from '../ir-store';
@@ -234,6 +235,61 @@ export function removePreset(name: string): void {
 
 export const isFactory = (name: string | null) => FACTORY.some((p) => p.name === name);
 
+const PRESET_FORMAT = 'browsamp-presets';
+
+function download(name: string, data: unknown): void {
+  const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+const fileName = (s: string) => s.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '').toLowerCase() || 'preset';
+
+/** Downloads the current settings, or every user preset, as a .json file. */
+export function exportPresets(which: 'current' | 'all'): void {
+  const list =
+    which === 'current'
+      ? [{ name: presets.current ?? 'Sans titre', state: $state.snapshot(rig) }]
+      : presets.user.map((p) => ({ name: p.name, state: p.state }));
+  if (!list.length) {
+    toast("Aucun preset personnel à exporter pour l'instant.");
+    return;
+  }
+  download(which === 'current' ? `${fileName(list[0].name)}.browsamp.json` : 'browsamp-presets.json', { format: PRESET_FORMAT, version: 1, presets: list });
+}
+
+/** Adds the presets of an exported file to the user presets (renaming on name clashes). */
+export async function importPresets(file: File): Promise<void> {
+  let data: unknown;
+  try {
+    data = JSON.parse(await file.text());
+  } catch {
+    toast('Fichier illisible : ce n’est pas un export de presets browsamp.');
+    return;
+  }
+  const raw = (data as { format?: string; presets?: unknown })?.format === PRESET_FORMAT ? (data as { presets: unknown }).presets : null;
+  if (!Array.isArray(raw)) {
+    toast('Fichier illisible : ce n’est pas un export de presets browsamp.');
+    return;
+  }
+  const taken = new Set([...FACTORY, ...presets.user].map((p) => p.name));
+  let count = 0;
+  for (const item of raw.slice(0, 500)) {
+    if (!item || typeof item !== 'object') continue;
+    const base = String((item as { name?: unknown }).name ?? 'Preset importé').trim().slice(0, 40) || 'Preset importé';
+    let name = base;
+    for (let i = 2; taken.has(name); i++) name = `${base} (${i})`;
+    taken.add(name);
+    saveUserPreset(name, normalize((item as { state?: unknown }).state));
+    count++;
+  }
+  presets.user = userPresets();
+  toast(count ? `${count} preset${count > 1 ? 's' : ''} importé${count > 1 ? 's' : ''}.` : 'Aucun preset trouvé dans ce fichier.');
+}
+
 // ---------- audio session ----------
 
 export async function start(withInput: boolean): Promise<boolean> {
@@ -264,6 +320,13 @@ export async function start(withInput: boolean): Promise<boolean> {
     session.starting = false;
     session.testing = engine.testing;
   }
+}
+
+/** The amp's power switch: opens the audio input and starts processing, or stops it. */
+export async function togglePower(): Promise<void> {
+  if (session.starting) return;
+  if (session.running) await stop();
+  else await start(true);
 }
 
 export async function stop(): Promise<void> {
@@ -336,7 +399,7 @@ export function toast(msg: string): void {
 
 // ---------- boot ----------
 
-if (import.meta.env.DEV) Object.assign(window, { browsamp: { engine, rig, setValue, toggleFx, moveMic, selectModel } });
+if (import.meta.env.DEV) Object.assign(window, { browsamp: { engine, rig, session, presets, view, setValue, toggleFx, moveMic, selectModel, exportPresets, importPresets, togglePower } });
 
 // Deep links: ?scene=cab, ?amp=2 (also handy for screenshots).
 {

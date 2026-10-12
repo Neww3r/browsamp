@@ -3,7 +3,6 @@ import raw from '../../art/layout.json';
 
 export interface AmpLayout {
   id: string;
-  name: string;
   voice: string;
   head: Rect;
   panel: Rect;
@@ -13,7 +12,7 @@ export interface AmpLayout {
   knobY: number;
   knobs: { key: string; x: number }[];
   labelDy: number;
-  logo: Point;
+  power: Point;
   jewel: Point;
 }
 
@@ -40,11 +39,12 @@ export interface Point {
 }
 
 export const LAYOUT = raw as unknown as {
+  /** The safe area: everything interactive lives in these coordinates. */
   stage: { w: number; h: number };
+  /** Backgrounds are rendered larger than the stage so any window shape is filled. */
+  canvas: Rect;
   frames: number;
   knobStrip: { cols: number; pad: number };
-  header: { h: number };
-  chain: { y: number };
   amps: AmpLayout[];
   pedal: {
     w: number;
@@ -57,6 +57,3 @@ export const LAYOUT = raw as unknown as {
   pedals: PedalLayout[];
   cab: { speaker: { cx: number; cy: number; r: number }; panel: Rect };
 };
-
-/** URL of a rendered asset in public/art. */
-export const art = (name: string) => `${import.meta.env.BASE_URL}art/${name}`;

@@ -1,8 +1,10 @@
 """Knob models and their filmstrips.
 
-Each knob is modelled at the origin with its axis pointing at the camera (-Y), rotated over
-the 300° sweep, and rendered on a transparent background with a shadow catcher so every
-frame carries its own drop shadow. Frames go to art/out/knob-<style>/NNNN.png.
+Each knob is modelled at the origin with its axis pointing at the camera (-Y), seen slightly
+from above (lib.TILT) so its sides show, rotated over the 300° sweep and rendered on a
+transparent background with a shadow catcher on the panel plane: every frame carries its
+own contact shadow. The frame is centred on the knob's base, i.e. its position on the panel.
+Frames go to art/out/knob-<style>/NNNN.png at lib.SCALE pixels per stage pixel.
 """
 
 import math
@@ -16,178 +18,239 @@ SWEEP = 300
 
 # Diameter in stage pixels each style is rendered for.
 STYLES = {
-    "chicken": 84,
-    "goldcap": 84,
-    "knurled": 84,
+    "clean": 84,
+    "crunch": 84,
+    "highgain": 84,
     "pedal": 66,
     "header": 58,
 }
 
 
-def _hull(points):
-    pts = sorted(set(points))
-    if len(pts) <= 2:
-        return pts
-
-    def cross(o, a, b):
-        return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
-
-    lower, upper = [], []
-    for p in pts:
-        while len(lower) >= 2 and cross(lower[-2], lower[-1], p) <= 0:
-            lower.pop()
-        lower.append(p)
-    for p in reversed(pts):
-        while len(upper) >= 2 and cross(upper[-2], upper[-1], p) <= 0:
-            upper.pop()
-        upper.append(p)
-    return lower[:-1] + upper[:-1]
+# ---------------------------------------------------------------- geometry helpers
 
 
-def prism(name, outline_xz, y_front, depth, mat, bevel_w=0.0, segments=5):
-    """Extrudes a closed XZ outline from y_front towards +Y (away from the camera)."""
+def lathe(name, profile, mat, segments=128, flutes=0, flute_depth=0.0, flute_from=0.0, flute_to=1.0):
+    """Revolves an (r, y) profile (y grows away from the camera) around the knob axis.
+    Optional flutes modulate the radius between profile fractions flute_from..flute_to."""
     mesh = bpy.data.meshes.new(name)
     bm = bmesh.new()
-    verts = [bm.verts.new((x, y_front, z)) for x, z in outline_xz]
-    face = bm.faces.new(verts)
-    ret = bmesh.ops.extrude_face_region(bm, geom=[face])
-    moved = [g for g in ret["geom"] if isinstance(g, bmesh.types.BMVert)]
-    bmesh.ops.translate(bm, vec=(0, depth, 0), verts=moved)
+    # A profile starting on the axis gets a single centre vertex instead of a collapsed ring.
+    closed = profile[0][0] == 0
+    centre = bm.verts.new((0, profile[0][1], 0)) if closed else None
+    pts = profile[1:] if closed else profile
+    n = len(pts)
+    rings = []
+    for i in range(segments):
+        a = 2 * math.pi * i / segments
+        ring = []
+        for j, (r, y) in enumerate(pts):
+            rr = r
+            t = (j + (1 if closed else 0)) / max(1, len(profile) - 1)
+            if flutes and flute_from <= t <= flute_to:
+                # Rounded scallops (sine-shaped grooves), not sharp crown points.
+                rr = r - flute_depth * (0.5 - 0.5 * math.cos(flutes * a)) ** 0.6
+            ring.append(bm.verts.new((rr * math.sin(a), y, rr * math.cos(a))))
+        rings.append(ring)
+    for i in range(segments):
+        a, b = rings[i], rings[(i + 1) % segments]
+        for j in range(n - 1):
+            bm.faces.new((a[j], b[j], b[j + 1], a[j + 1]))
+        if closed:
+            bm.faces.new((centre, b[0], a[0]))
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     bm.to_mesh(mesh)
     bm.free()
     o = bpy.data.objects.new(name, mesh)
     bpy.context.collection.objects.link(o)
-    if bevel_w:
-        lib.bevel(o, bevel_w, segments)
+    lib._smooth(o, 40)
     o.data.materials.append(mat)
     return o
 
 
-def fluted(name, r_out, r_in, flutes, y_front, depth, mat, bevel_w=0.0, sharpness=0.5):
-    n = flutes * 10
-    pts = []
-    for i in range(n):
-        a = 2 * math.pi * i / n
-        k = (0.5 + 0.5 * math.cos(flutes * a)) ** sharpness
-        r = r_in + (r_out - r_in) * k
-        pts.append((r * math.cos(a), r * math.sin(a)))
-    return prism(name, pts, y_front, depth, mat, bevel_w, 3)
+def rounded(profile_pts, radius, steps=4):
+    """Adds small fillets between consecutive straight segments of an (r, y) polyline."""
+    out = [profile_pts[0]]
+    for i in range(1, len(profile_pts) - 1):
+        p0, p1, p2 = profile_pts[i - 1], profile_pts[i], profile_pts[i + 1]
+        d0 = math.dist(p0, p1)
+        d1 = math.dist(p1, p2)
+        k = min(radius, d0 / 2, d1 / 2)
+        a = (p1[0] + (p0[0] - p1[0]) * k / d0, p1[1] + (p0[1] - p1[1]) * k / d0)
+        b = (p1[0] + (p2[0] - p1[0]) * k / d1, p1[1] + (p2[1] - p1[1]) * k / d1)
+        for s in range(steps + 1):
+            t = s / steps
+            # quadratic Bézier a → p1 → b
+            x = (1 - t) ** 2 * a[0] + 2 * (1 - t) * t * p1[0] + t * t * b[0]
+            y = (1 - t) ** 2 * a[1] + 2 * (1 - t) * t * p1[1] + t * t * b[1]
+            out.append((x, y))
+    out.append(profile_pts[-1])
+    return out
 
 
-def circle_pts(cx, cz, r, n=48):
-    return [(cx + r * math.cos(2 * math.pi * i / n), cz + r * math.sin(2 * math.pi * i / n)) for i in range(n)]
+def line_mark(name, r0, r1, width, y, mat, depth=0.004):
+    """Pointer line from radius r0 to r1 at 12 o'clock, slightly proud of the surface at y."""
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(0, y - depth / 2, (r0 + r1) / 2))
+    o = bpy.context.active_object
+    o.name = name
+    o.scale = (width, depth, r1 - r0)
+    bpy.ops.object.transform_apply(scale=True)
+    o.data.materials.append(mat)
+    return o
 
 
-def parent_all(objs):
-    root = bpy.data.objects.new("Knob", None)
-    bpy.context.collection.objects.link(root)
-    for o in objs:
-        o.parent = root
-    return root
+# ---------------------------------------------------------------- materials
+
+
+def mat_bakelite(color, rough=0.28):
+    m = lib.M("Bakelite").set(Base_Color=(*color, 1), Roughness=rough, Coat_Weight=0.6, Coat_Roughness=0.12, Specular_IOR_Level=0.6)
+    n = m.noise(m.mapping("Object"), 180, 4)
+    m.to("Roughness", m.ramp(n.outputs["Fac"], [(0.3, (rough * 0.8,) * 3), (0.7, (rough * 1.3,) * 3)]))
+    return m.mat
+
+
+def mat_spun(name, color, rough=0.18):
+    """Spun / turned metal: concentric anisotropic highlights around the knob axis."""
+    m = lib.M(name).set(Base_Color=(*color, 1), Metallic=1.0, Roughness=rough, Anisotropic=0.9)
+    tan = m.node("ShaderNodeTangent", direction_type="RADIAL", axis="Y")
+    m.link(tan.outputs["Tangent"], m.bsdf.inputs["Tangent"])
+    rings = m.node("ShaderNodeTexWave", wave_type="RINGS", rings_direction="Y", wave_profile="SIN")
+    rings.inputs["Scale"].default_value = 140
+    rings.inputs["Distortion"].default_value = 2
+    rings.inputs["Detail"].default_value = 4
+    m.link(m.mapping("Object"), rings.inputs["Vector"])
+    m.to("Roughness", m.ramp(rings.outputs["Fac"], [(0.0, (rough * 0.7,) * 3), (1.0, (rough * 1.4,) * 3)]))
+    return m.mat
+
+
+def mat_knurl(name, color, rough=0.3, density=60):
+    """Diamond knurling on a cylinder: two helical band patterns crossing each other."""
+    m = lib.M(name).set(Base_Color=(*color, 1), Metallic=1.0, Roughness=rough)
+    sep = m.node("ShaderNodeSeparateXYZ")
+    m.link(m.coord.outputs["Object"], sep.inputs["Vector"])
+    ang = m.math("ARCTAN2", sep.outputs["X"], sep.outputs["Z"])
+    u = m.math("MULTIPLY", ang, density / (2 * math.pi))
+    v = m.math("MULTIPLY", sep.outputs["Y"], density * 0.9)
+    d1 = m.math("SINE", m.math("MULTIPLY", m.math("ADD", u, v), 2 * math.pi))
+    d2 = m.math("SINE", m.math("MULTIPLY", m.math("SUBTRACT", u, v), 2 * math.pi))
+    h = m.math("MULTIPLY", m.math("ABSOLUTE", d1), m.math("ABSOLUTE", d2))
+    m.to("Normal", m.bump(h, 0.9, 0.006))
+    m.to("Roughness", m.ramp(h, [(0.0, (rough * 1.6,) * 3), (1.0, (rough * 0.8,) * 3)]))
+    return m.mat
 
 
 # ---------------------------------------------------------------- styles
+# Profiles are (radius, y) from the front face backwards; d is the knob diameter in units.
 
 
-def build_chicken(d):
-    cream = lib.M("Bakelite").set(Base_Color=(0.80, 0.73, 0.57, 1), Roughness=0.3, Coat_Weight=0.5, Coat_Roughness=0.08, Subsurface_Weight=0.08).mat
-    ink = lib.mat_plastic("Ink", (0.03, 0.025, 0.02), 0.5)
-    objs = [lib.cylinder("Skirt", d * 0.40, 0.07, -0.07, mat=cream, bevel_w=0.03)]
-    # Teardrop: the hull of a round body and a small pointer tip.
-    wing = _hull(circle_pts(0, -d * 0.04, d * 0.30, 64) + circle_pts(0, d * 0.43, d * 0.05, 24))
-    objs.append(prism("Wing", wing, -0.33, 0.27, cream, bevel_w=0.07, segments=6))
-    line = [(-d * 0.013, d * 0.06), (d * 0.013, d * 0.06), (d * 0.013, d * 0.44), (-d * 0.013, d * 0.44)]
-    objs.append(prism("Line", line, -0.335, 0.01, ink))
+def build_clean(d):
+    """Vintage: black skirted knob with a polished aluminium top."""
+    black = mat_bakelite((0.012, 0.012, 0.013), 0.25)
+    alu = mat_spun("Alu", (0.86, 0.86, 0.87), 0.12)
+    white = lib.mat_plastic("Pointer", (0.9, 0.88, 0.82), 0.4)
+    R = d / 2
+    body = rounded([(0, -0.4), (R * 0.62, -0.4), (R * 0.66, -0.12), (R * 0.95, -0.09), (R * 0.97, 0.0)], 0.025)
+    objs = [lathe("Body", body, black, flutes=48, flute_depth=0.012, flute_from=0.3, flute_to=0.62)]
+    cap = rounded([(0, -0.425), (R * 0.5, -0.42), (R * 0.56, -0.395), (R * 0.58, -0.37)], 0.012)
+    objs.append(lathe("Cap", cap, alu))
+    objs.append(line_mark("SkirtLine", R * 0.7, R * 0.93, 0.022, -0.095, white))
+    objs.append(line_mark("CapLine", R * 0.05, R * 0.48, 0.018, -0.426, lib.mat_plastic("Ink", (0.02, 0.02, 0.02), 0.5)))
     return objs
 
 
-def build_goldcap(d):
-    black = lib.mat_plastic("Black", (0.012, 0.012, 0.012), 0.32, coat=0.4)
-    gold = lib.mat_metal("Gold", (0.86, 0.66, 0.30), 0.22, aniso=0.8, brushed_axis="Y")
+def build_crunch(d):
+    """Brit style: fluted black body with a brushed gold cap."""
+    black = mat_bakelite((0.01, 0.01, 0.011), 0.22)
+    gold = mat_spun("Gold", (0.88, 0.66, 0.3), 0.2)
     ink = lib.mat_plastic("Ink", (0.02, 0.015, 0.01), 0.45)
-    white = lib.mat_plastic("White", (0.85, 0.83, 0.78), 0.35)
+    R = d / 2
+    skirt = rounded([(0, -0.1), (R * 0.98, -0.1), (R * 1.0, -0.05), (R * 1.0, 0.0)], 0.02)
+    body = rounded([(0, -0.38), (R * 0.8, -0.38), (R * 0.86, -0.34), (R * 0.88, -0.1)], 0.03)
     objs = [
-        fluted("Skirt", d * 0.47, d * 0.45, 40, -0.12, 0.12, black, 0.012),
-        fluted("Body", d * 0.40, d * 0.375, 28, -0.36, 0.26, black, 0.02),
-        lib.cylinder("Cap", d * 0.30, 0.03, -0.39, mat=gold, bevel_w=0.012),
+        lathe("Skirt", skirt, black, flutes=64, flute_depth=0.006),
+        lathe("Body", body, black, flutes=30, flute_depth=0.014, flute_from=0.25),
     ]
-    line = [(-d * 0.014, d * 0.02), (d * 0.014, d * 0.02), (d * 0.014, d * 0.27), (-d * 0.014, d * 0.27)]
-    objs.append(prism("Line", line, -0.395, 0.01, ink))
-    dot = [(x, z) for x, z in circle_pts(0, d * 0.43, d * 0.022, 16)]
-    objs.append(prism("Dot", dot, -0.125, 0.008, white))
+    cap = rounded([(0, -0.405), (R * 0.62, -0.4), (R * 0.68, -0.38), (R * 0.7, -0.37)], 0.012)
+    objs.append(lathe("Cap", cap, gold))
+    objs.append(line_mark("Line", R * 0.04, R * 0.6, 0.02, -0.406, ink))
     return objs
 
 
-def build_knurled(d):
-    alu = lib.mat_metal("Alu", (0.80, 0.81, 0.83), 0.2, aniso=0.85, brushed_axis="Y")
-    side = lib.M("Knurl").set(Base_Color=(0.7, 0.71, 0.73, 1), Metallic=1, Roughness=0.35)
-    wave = side.node("ShaderNodeTexWave", wave_type="RINGS", rings_direction="Y", wave_profile="SAW")
-    wave.inputs["Scale"].default_value = 40
-    side.link(side.mapping("Object"), wave.inputs["Vector"])
-    side.to("Normal", side.bump(wave.outputs["Fac"], 0.8, 0.01))
-    black = lib.mat_plastic("Insert", (0.01, 0.01, 0.011), 0.25, coat=0.6)
-    red = lib.mat_emission("Red", (1.0, 0.12, 0.05), 3.0)
-    objs = [
-        fluted("Body", d * 0.42, d * 0.405, 60, -0.40, 0.40, side.mat, 0.0, 0.3),
-        lib.cylinder("Face", d * 0.405, 0.06, -0.43, mat=alu, bevel_w=0.035, segments=6),
-        lib.cylinder("Insert", d * 0.27, 0.02, -0.445, mat=black, bevel_w=0.008),
-    ]
-    line = [(-d * 0.016, d * 0.06), (d * 0.016, d * 0.06), (d * 0.016, d * 0.25), (-d * 0.016, d * 0.25)]
-    objs.append(prism("Line", line, -0.449, 0.006, red))
+def build_highgain(d):
+    """Machined aluminium with diamond knurling and a black anodised face."""
+    knurl = mat_knurl("Knurl", (0.78, 0.79, 0.81), 0.3, 70)
+    alu = mat_spun("Alu", (0.82, 0.83, 0.85), 0.16)
+    black = lib.M("Anodised").set(Base_Color=(0.012, 0.012, 0.014, 1), Metallic=0.7, Roughness=0.28).mat
+    red = lib.M("Red").set(Base_Color=(0.6, 0.02, 0.01, 1), Emission_Color=(1.0, 0.1, 0.04, 1), Emission_Strength=2.5, Roughness=0.4).mat
+    R = d / 2
+    body = [(R * 0.9, -0.4), (R * 0.92, -0.38), (R * 0.92, -0.04), (R * 0.88, 0.0)]
+    objs = [lathe("Knurl", [(0, -0.4)] + body, knurl)]
+    chamfer = rounded([(0, -0.45), (R * 0.62, -0.45), (R * 0.84, -0.41), (R * 0.9, -0.39)], 0.01)
+    objs.append(lathe("Chamfer", chamfer, alu))
+    face = [(0, -0.455), (R * 0.6, -0.455), (R * 0.61, -0.45)]
+    objs.append(lathe("Face", face, black))
+    objs.append(line_mark("Line", R * 0.12, R * 0.56, 0.024, -0.456, red))
     return objs
 
 
 def build_pedal(d):
-    black = lib.mat_plastic("Black", (0.018, 0.018, 0.018), 0.42, coat=0.2)
-    white = lib.mat_plastic("White", (0.9, 0.9, 0.88), 0.4)
+    """Classic overdrive-pedal knob: fluted black plastic with a white line."""
+    black = mat_bakelite((0.014, 0.014, 0.014), 0.38)
+    white = lib.mat_plastic("Pointer", (0.92, 0.92, 0.9), 0.4)
+    R = d / 2
+    skirt = rounded([(0, -0.08), (R * 0.96, -0.08), (R * 1.0, -0.03), (R * 1.0, 0.0)], 0.015)
+    body = rounded([(0, -0.36), (R * 0.72, -0.36), (R * 0.8, -0.32), (R * 0.84, -0.08)], 0.03)
     objs = [
-        fluted("Body", d * 0.44, d * 0.41, 22, -0.30, 0.30, black, 0.025),
-        lib.cylinder("Top", d * 0.36, 0.03, -0.32, mat=black, bevel_w=0.015),
+        lathe("Skirt", skirt, black, flutes=48, flute_depth=0.005),
+        lathe("Body", body, black, flutes=22, flute_depth=0.016, flute_from=0.25),
     ]
-    line = [(-d * 0.022, d * 0.10), (d * 0.022, d * 0.10), (d * 0.022, d * 0.42), (-d * 0.022, d * 0.42)]
-    objs.append(prism("Line", line, -0.324, 0.006, white))
+    objs.append(line_mark("Line", R * 0.08, R * 0.78, 0.035, -0.362, white))
     return objs
 
 
 def build_header(d):
-    alu = lib.mat_metal("Alu", (0.72, 0.72, 0.74), 0.22, aniso=0.8, brushed_axis="Y")
-    rim = lib.mat_plastic("Rim", (0.02, 0.02, 0.02), 0.35, coat=0.3)
-    accent = lib.mat_emission("Accent", (1.0, 0.6, 0.18), 6.0)
-    objs = [
-        fluted("Rim", d * 0.47, d * 0.45, 30, -0.18, 0.18, rim, 0.015),
-        lib.cylinder("Face", d * 0.36, 0.05, -0.22, mat=alu, bevel_w=0.025, segments=5),
-    ]
-    line = [(-d * 0.025, d * 0.1), (d * 0.025, d * 0.1), (d * 0.025, d * 0.34), (-d * 0.025, d * 0.34)]
-    objs.append(prism("Line", line, -0.223, 0.004, accent))
+    """Compact machined knob for the global controls, with an amber index."""
+    knurl = mat_knurl("Knurl", (0.7, 0.71, 0.73), 0.32, 50)
+    alu = mat_spun("Alu", (0.8, 0.8, 0.82), 0.16)
+    amber = lib.M("Amber").set(Base_Color=(0.9, 0.5, 0.1, 1), Emission_Color=(1.0, 0.6, 0.18, 1), Emission_Strength=3, Roughness=0.4).mat
+    R = d / 2
+    body = [(0, -0.26), (R * 0.9, -0.26), (R * 0.92, -0.24), (R * 0.92, -0.03), (R * 0.88, 0.0)]
+    objs = [lathe("Knurl", body, knurl)]
+    face = rounded([(0, -0.3), (R * 0.66, -0.3), (R * 0.86, -0.27), (R * 0.9, -0.25)], 0.01)
+    objs.append(lathe("Face", face, alu))
+    objs.append(line_mark("Line", R * 0.18, R * 0.62, 0.03, -0.302, amber))
     return objs
 
 
 BUILDERS = {
-    "chicken": build_chicken,
-    "goldcap": build_goldcap,
-    "knurled": build_knurled,
+    "clean": build_clean,
+    "crunch": build_crunch,
+    "highgain": build_highgain,
     "pedal": build_pedal,
     "header": build_header,
 }
 
 
-def render_style(style, samples=64, frames=None):
-    size_px = STYLES[style]
-    pad = lib.LAYOUT["knobStrip"]["pad"]
-    n_frames = frames or lib.LAYOUT["frames"]
-    frame_px = round(size_px * pad * lib.DPR)
+def setup_object_render(size_px, pad, samples):
+    """Transparent, tilted, shadow-catching setup for anything sitting on a panel."""
+    frame_px = round(size_px * pad * lib.SCALE)
     lib.reset()
     lib.render_settings(frame_px, frame_px, samples, transparent=True)
-    cam = lib.camera((lib.STAGE_W / 2, lib.STAGE_H / 2), size_px * pad)
-    cam.location.x, cam.location.z = 0, 0
+    cam = lib.camera((lib.STAGE_W / 2, lib.STAGE_H / 2), size_px * pad, tilt_deg=lib.TILT)
+    t = math.radians(lib.TILT)
+    cam.location = (0, -40 * math.cos(t), 40 * math.sin(t))
     lib.studio()
-
-    catcher = lib.front_plane("Catcher", -3, -3, 3, 3, 0.0, lib.mat_plastic("Catcher", (0.5, 0.5, 0.5)))
+    catcher = lib.front_plane("Catcher", -4, -4, 4, 4, 0.0, lib.mat_plastic("Catcher", (0.5, 0.5, 0.5)))
     catcher.is_shadow_catcher = True
 
-    d = size_px / 100
-    root = parent_all(BUILDERS[style](d))
+
+def render_style(style, samples=64, frames=None):
+    size_px = STYLES[style]
+    n_frames = frames or lib.LAYOUT["frames"]
+    setup_object_render(size_px, lib.LAYOUT["knobStrip"]["pad"], samples)
+    root = bpy.data.objects.new("Knob", None)
+    bpy.context.collection.objects.link(root)
+    for o in BUILDERS[style](size_px / 100):
+        o.parent = root
     out = lib.OUT / f"knob-{style}"
     for f in range(n_frames):
         t = f / (n_frames - 1)

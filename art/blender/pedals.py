@@ -1,5 +1,6 @@
 """Pedalboard scenes (top-down): two pedals on a board, patched together, on a stage floor.
-Knobs, footswitch states and LED glow are overlays; printing comes from art/tex/pedal-*.png."""
+Knobs, footswitches (art/blender/switches.py) and LED glow are overlays; printing comes from
+art/tex/pedal-*.png."""
 
 import math
 
@@ -49,8 +50,6 @@ def pedal(p, chrome, rubber):
     lib.cylinder("LedBezel", 0.12, 0.05, top - 0.05, lx, lz, chrome, bevel_w=0.015)
     lens = lib.M("Lens").set(Base_Color=(0.5, 0.02, 0.01, 1), Roughness=0.15, Transmission_Weight=0.6, Coat_Weight=1)
     lib.cylinder("LedLens", 0.075, 0.07, top - 0.08, lx, lz, lens.mat, bevel_w=0.03)
-    fx, fz = w(p["cx"] + P["footswitch"]["dx"], p["cy"] + P["footswitch"]["dy"])
-    lib.cylinder("SwitchNut", 0.34, 0.05, top - 0.05, fx, fz, chrome, verts=6, bevel_w=0.012)
     # Jacks on the sides (input on the left, output on the right).
     for side in (-1, 1):
         jx = cx + side * (hw + 0.05)
@@ -116,8 +115,8 @@ def mat_floor():
 
 def render_board(scene, samples=160):
     lib.reset()
-    lib.render_settings(lib.STAGE_W * lib.DPR, lib.STAGE_H * lib.DPR, samples)
-    lib.camera()
+    bpy.context.scene.cycles.samples = samples
+    lib.canvas_camera()
     chrome = lib.mat_metal("Chrome", (0.92, 0.92, 0.93), 0.1)
     rubber = lib.mat_plastic("Rubber", (0.012, 0.012, 0.012), 0.6)
     alu = lib.mat_metal("Rail", (0.55, 0.56, 0.58), 0.3, aniso=0.6, brushed_axis="UV")
@@ -136,43 +135,14 @@ def render_board(scene, samples=160):
     hi, lo = BOARD_Y - 0.3, BOARD_Y - 0.08  # plug height, resting on the board
     # Input from off-board left, patch between pedals, output off-board right.
     ix, iz = plug(*jacks[0][0], -1, chrome, black)
-    cable("In", [(-9, lo, iz + 2.6), (ix - 2.2, lo, iz + 0.7), (ix, hi, iz)], cable_mat)
+    cable("In", [(-13, lo, iz + 3.4), (ix - 2.4, lo, iz + 0.8), (ix, hi, iz)], cable_mat)
     ax, az = plug(*jacks[0][1], 1, chrome, black)
     bx, bz = plug(*jacks[1][0], -1, chrome, black)
     cable("Patch", [(ax, hi, az), ((ax + bx) / 2, lo, az + 1.3), (bx, hi, bz)], cable_mat)
     ox, oz = plug(*jacks[1][1], 1, chrome, black)
-    cable("Out", [(ox, hi, oz), (ox + 2.2, lo, oz + 0.7), (9, lo, oz + 2.6)], cable_mat)
+    cable("Out", [(ox, hi, oz), (ox + 2.4, lo, oz + 0.8), (13, lo, oz + 3.4)], cable_mat)
 
     # Glossy clear coats would mirror the full reflection card and wash the paint out.
     lib.studio(key=2.6, warmth=(1.0, 0.94, 0.86), card=0.45)
     lib.spot("Pool", (0, -6, 8), (0, BOARD_Y, 0.3), 9000, 70, 0.9, (1.0, 0.82, 0.62), 1.2)
     lib.render(lib.OUT / f"board-{scene}.png")
-
-
-def render_footswitch(pressed, samples=64):
-    r = lib.LAYOUT["pedal"]["footswitch"]["r"]
-    pad = lib.LAYOUT["knobStrip"]["pad"]
-    px = round(r * 2 * pad * lib.DPR)
-    lib.reset()
-    lib.render_settings(px, px, samples, transparent=True)
-    cam = lib.camera((lib.STAGE_W / 2, lib.STAGE_H / 2), r * 2 * pad)
-    cam.location.x, cam.location.z = 0, 0
-    lib.studio()
-    catcher = lib.front_plane("Catcher", -3, -3, 3, 3, 0.0, lib.mat_plastic("Catcher", (0.5, 0.5, 0.5)))
-    catcher.is_shadow_catcher = True
-    chrome = lib.mat_metal("Chrome", (0.93, 0.93, 0.94), 0.08)
-    knurl = lib.M("Knurl").set(Base_Color=(0.85, 0.85, 0.87, 1), Metallic=1, Roughness=0.25)
-    wave = knurl.node("ShaderNodeTexWave", wave_type="RINGS", rings_direction="Y", wave_profile="SAW")
-    wave.inputs["Scale"].default_value = 6
-    knurl.link(knurl.mapping("Object"), wave.inputs["Vector"])
-    knurl.to("Normal", knurl.bump(wave.outputs["Fac"], 0.5, 0.01))
-    travel = 0.06 if pressed else 0.0
-    rr = u(r)
-    lib.cylinder("Ring", rr * 0.95, 0.06, -0.06, mat=knurl.mat, bevel_w=0.015)
-    lib.cylinder("Shaft", rr * 0.52, 0.22 - travel, -0.28 + travel, mat=chrome, bevel_w=0.02)
-    bpy.ops.mesh.primitive_uv_sphere_add(radius=rr * 0.55, segments=64, ring_count=32, location=(0, -0.28 + travel, 0))
-    cap = bpy.context.active_object
-    cap.scale = (1, 0.35, 1)
-    lib._smooth(cap, 80)
-    cap.data.materials.append(chrome)
-    lib.render(lib.OUT / f"footswitch-{'down' if pressed else 'up'}.png")

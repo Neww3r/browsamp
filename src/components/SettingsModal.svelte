@@ -1,7 +1,7 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
   import { Engine } from '../audio/engine';
-  import { measureRoundTrip, session, setChannel, setInputDevice, setOutputDevice, start, stop, toggleTest, ui } from '../lib/rig.svelte';
+  import { measureRoundTrip, session, setChannel, setInputDevice, setOutputDevice, ui } from '../lib/rig.svelte';
   import Icon from './Icon.svelte';
 
   let measuring = $state(false);
@@ -11,12 +11,6 @@
     measuring = true;
     await measureRoundTrip();
     measuring = false;
-  }
-  function onDi(e: Event) {
-    const input = e.target as HTMLInputElement;
-    const file = input.files?.[0];
-    input.value = '';
-    if (file) void toggleTest(file);
   }
 </script>
 
@@ -55,14 +49,9 @@
     {/if}
   </div>
 
-  <div class="row">
-    <button class="btn primary" disabled={session.starting} onclick={() => (session.running && session.withInput ? stop() : start(true))}>
-      <Icon name="power" size={18} />
-      {session.running && session.withInput ? "Arrêter l'audio" : 'Démarrer avec l’entrée'}
-    </button>
-    <button class="btn" onclick={() => toggleTest()}><Icon name={session.testing ? 'stop' : 'play'} size={16} /> {session.testing ? 'Arrêter le test' : 'Signal de test'}</button>
-    <label class="btn">DI…<input type="file" accept="audio/*" hidden onchange={onDi} /></label>
-  </div>
+  <p class="status" class:on={session.running}>
+    {session.running ? (session.withInput ? 'Ampli allumé : l’entrée audio est ouverte.' : 'Ampli allumé, sans entrée audio.') : 'Ampli éteint : allumez-le avec l’interrupteur POWER sur sa façade.'}
+  </p>
 
   <section class="lat">
     <h3>Latence</h3>
@@ -150,14 +139,16 @@
     text-transform: none;
     letter-spacing: 0;
   }
-  .row {
-    display: flex;
-    gap: 10px;
+  .status {
+    margin: 0;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    font: 15px/1.4 var(--body-font);
+    color: #c8bfb3;
   }
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
+  .status.on {
+    color: #a8e8b4;
   }
   .lat {
     display: grid;
