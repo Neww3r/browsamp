@@ -1,0 +1,12 @@
+node_modules/
+dist/
+dsp/target/
+src/wasm/*.wasm
+renders/
+.DS_Store
+art/out/
+art/tex/
+captures/
+.claude/
+*.tar.gz
+!src/wasm/.gitkeep

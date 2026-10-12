@@ -1,0 +1,382 @@
+{
+  "stage": {
+    "w": 1600,
+    "h": 1000
+  },
+  "frames": 64,
+  "knobStrip": {
+    "cols": 8,
+    "pad": 1.5
+  },
+  "header": {
+    "h": 84
+  },
+  "chain": {
+    "y": 904
+  },
+  "amps": [
+    {
+      "id": "sunset",
+      "name": "Sunset 57",
+      "voice": "Clean",
+      "head": {
+        "x": 170,
+        "y": 270,
+        "w": 1260,
+        "h": 470
+      },
+      "panel": {
+        "x": 215,
+        "y": 560,
+        "w": 1170,
+        "h": 160
+      },
+      "grille": {
+        "x": 215,
+        "y": 305,
+        "w": 1170,
+        "h": 228
+      },
+      "knobSize": 84,
+      "knobStyle": "chicken",
+      "knobY": 628,
+      "knobs": [
+        {
+          "key": "gain",
+          "x": 360
+        },
+        {
+          "key": "bass",
+          "x": 495
+        },
+        {
+          "key": "mid",
+          "x": 630
+        },
+        {
+          "key": "treble",
+          "x": 765
+        },
+        {
+          "key": "presence",
+          "x": 900
+        },
+        {
+          "key": "resonance",
+          "x": 1035
+        },
+        {
+          "key": "master",
+          "x": 1170
+        }
+      ],
+      "labelDy": 72,
+      "logo": {
+        "x": 800,
+        "y": 419
+      },
+      "jewel": {
+        "x": 1300,
+        "y": 628
+      }
+    },
+    {
+      "id": "brixton",
+      "name": "Brixton 800",
+      "voice": "Crunch",
+      "head": {
+        "x": 170,
+        "y": 270,
+        "w": 1260,
+        "h": 470
+      },
+      "panel": {
+        "x": 215,
+        "y": 290,
+        "w": 1170,
+        "h": 160
+      },
+      "grille": {
+        "x": 215,
+        "y": 480,
+        "w": 1170,
+        "h": 228
+      },
+      "knobSize": 84,
+      "knobStyle": "goldcap",
+      "knobY": 358,
+      "knobs": [
+        {
+          "key": "presence",
+          "x": 400
+        },
+        {
+          "key": "bass",
+          "x": 530
+        },
+        {
+          "key": "mid",
+          "x": 660
+        },
+        {
+          "key": "treble",
+          "x": 790
+        },
+        {
+          "key": "resonance",
+          "x": 920
+        },
+        {
+          "key": "master",
+          "x": 1050
+        },
+        {
+          "key": "gain",
+          "x": 1180
+        }
+      ],
+      "labelDy": 70,
+      "logo": {
+        "x": 800,
+        "y": 594
+      },
+      "jewel": {
+        "x": 290,
+        "y": 358
+      }
+    },
+    {
+      "id": "obsidian",
+      "name": "Obsidian",
+      "voice": "High-gain",
+      "head": {
+        "x": 170,
+        "y": 270,
+        "w": 1260,
+        "h": 470
+      },
+      "panel": {
+        "x": 200,
+        "y": 565,
+        "w": 1200,
+        "h": 160
+      },
+      "grille": {
+        "x": 215,
+        "y": 300,
+        "w": 1170,
+        "h": 235
+      },
+      "knobSize": 84,
+      "knobStyle": "knurled",
+      "knobY": 633,
+      "knobs": [
+        {
+          "key": "gain",
+          "x": 380
+        },
+        {
+          "key": "bass",
+          "x": 510
+        },
+        {
+          "key": "mid",
+          "x": 640
+        },
+        {
+          "key": "treble",
+          "x": 770
+        },
+        {
+          "key": "presence",
+          "x": 900
+        },
+        {
+          "key": "resonance",
+          "x": 1030
+        },
+        {
+          "key": "master",
+          "x": 1160
+        }
+      ],
+      "labelDy": 70,
+      "logo": {
+        "x": 800,
+        "y": 417
+      },
+      "jewel": {
+        "x": 1290,
+        "y": 633
+      }
+    }
+  ],
+  "pedal": {
+    "w": 250,
+    "h": 410,
+    "knobSize": 66,
+    "footswitch": {
+      "dx": 0,
+      "dy": 150,
+      "r": 30
+    },
+    "led": {
+      "dx": 0,
+      "dy": 92
+    },
+    "name": {
+      "dx": 0,
+      "dy": 18
+    }
+  },
+  "pedals": [
+    {
+      "id": "comp",
+      "scene": "pre",
+      "name": "Squeeze",
+      "color": [
+        0.06,
+        0.16,
+        0.42
+      ],
+      "cx": 610,
+      "cy": 480,
+      "knobs": [
+        {
+          "key": "compLevel",
+          "dx": -62,
+          "dy": -142
+        },
+        {
+          "key": "compSustain",
+          "dx": 62,
+          "dy": -142
+        },
+        {
+          "key": "compAttack",
+          "dx": -62,
+          "dy": -42
+        },
+        {
+          "key": "compBlend",
+          "dx": 62,
+          "dy": -42
+        }
+      ],
+      "subtitle": "Compressor"
+    },
+    {
+      "id": "od",
+      "scene": "pre",
+      "name": "Verdant",
+      "color": [
+        0.13,
+        0.42,
+        0.18
+      ],
+      "cx": 990,
+      "cy": 480,
+      "knobs": [
+        {
+          "key": "odDrive",
+          "dx": -66,
+          "dy": -142
+        },
+        {
+          "key": "odLevel",
+          "dx": 66,
+          "dy": -142
+        },
+        {
+          "key": "odTone",
+          "dx": 0,
+          "dy": -50
+        }
+      ],
+      "subtitle": "Overdrive"
+    },
+    {
+      "id": "delay",
+      "scene": "post",
+      "name": "Echo 300",
+      "color": [
+        0.62,
+        0.63,
+        0.6
+      ],
+      "cx": 610,
+      "cy": 480,
+      "knobs": [
+        {
+          "key": "delayMix",
+          "dx": -62,
+          "dy": -142
+        },
+        {
+          "key": "delayTime",
+          "dx": 62,
+          "dy": -142
+        },
+        {
+          "key": "delayFb",
+          "dx": -62,
+          "dy": -42
+        },
+        {
+          "key": "delayTone",
+          "dx": 62,
+          "dy": -42
+        }
+      ],
+      "subtitle": "Echo delay"
+    },
+    {
+      "id": "reverb",
+      "scene": "post",
+      "name": "Cathedral",
+      "color": [
+        0.24,
+        0.08,
+        0.32
+      ],
+      "cx": 990,
+      "cy": 480,
+      "knobs": [
+        {
+          "key": "reverbMix",
+          "dx": -62,
+          "dy": -142
+        },
+        {
+          "key": "reverbDecay",
+          "dx": 62,
+          "dy": -142
+        },
+        {
+          "key": "reverbDamp",
+          "dx": -62,
+          "dy": -42
+        },
+        {
+          "key": "reverbPredelay",
+          "dx": 62,
+          "dy": -42
+        }
+      ],
+      "subtitle": "Reverb"
+    }
+  ],
+  "cab": {
+    "speaker": {
+      "cx": 600,
+      "cy": 492,
+      "r": 320
+    },
+    "panel": {
+      "x": 1060,
+      "y": 150,
+      "w": 440,
+      "h": 690
+    }
+  }
+}

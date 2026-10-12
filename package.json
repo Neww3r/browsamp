@@ -1,0 +1,29 @@
+{
+  "name": "browsamp",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "wasm": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo build --release --target wasm32-unknown-unknown --manifest-path dsp/Cargo.toml && cp dsp/target/wasm32-unknown-unknown/release/browsamp_dsp.wasm src/wasm/dsp.wasm",
+    "dev": "npm run wasm && vite",
+    "build": "npm run wasm && npm run typecheck && vite build",
+    "preview": "vite preview",
+    "test": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo test --release --manifest-path dsp/Cargo.toml",
+    "typecheck": "svelte-check --tsconfig ./tsconfig.json --fail-on-warnings",
+    "art": "python3 art/build.py"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^7.3.1",
+    "@types/node": "^24.19.2",
+    "svelte": "^5.57.2",
+    "svelte-check": "^4.7.6",
+    "typescript": "^6.0.3",
+    "vite": "^8.3.4"
+  },
+  "dependencies": {
+    "@fontsource/josefin-sans": "^5.3.0",
+    "@fontsource/kaushan-script": "^5.3.0",
+    "@fontsource/oswald": "^5.3.0",
+    "@fontsource/yellowtail": "^5.3.0"
+  }
+}
