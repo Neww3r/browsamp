@@ -56,7 +56,7 @@ export const PARAMS: ParamDef[] = [
   { key: 'reverbDecay', label: 'Decay', target: 'fx', id: 5, min: 0.3, max: 10, def: 2, log: true, fmt: (v) => `${v.toFixed(1)} s` },
   { key: 'reverbDamp', label: 'Damping', target: 'fx', id: 6, min: 0, max: 90, def: 35, toDsp: div100, fmt: pct },
   { key: 'reverbPredelay', label: 'Pre-delay', target: 'fx', id: 7, min: 0, max: 150, def: 15, fmt: (v) => `${Math.round(v)} ms` },
-  { key: 'output', label: 'Output', target: 'fx', id: 8, min: -40, max: 12, def: -6, fmt: db },
+  { key: 'output', label: 'Output', target: 'fx', id: 8, min: -40, max: 12, def: -9, fmt: db },
 
   // Cabinet microphones.
   { key: 'mic1Dist', label: 'Distance', target: 'cab', id: 0, min: 0, max: 30, def: 2, fmt: (v) => `${v.toFixed(1)} cm` },

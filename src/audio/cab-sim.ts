@@ -77,5 +77,31 @@ export async function renderMicIr(ctx: BaseAudioContext, cabinet: number, mics: 
   if (!active) cab.connect(off.destination);
   src.start();
   const out = await off.startRendering();
-  return toBuffer(ctx, conditionIr(out.getChannelData(0), sr));
+  return toBuffer(ctx, normalizeGuitarBand(conditionIr(out.getChannelData(0), sr), sr));
 }
+
+/**
+ * Scales an IR so its average gain over the guitar's core band is constant. Unit-energy
+ * normalization would make darker mic positions louder (their energy sits where the guitar
+ * lives), whereas a real mic moved to the edge of the cone mostly loses treble.
+ */
+function normalizeGuitarBand(ir: Float32Array, sr: number): Float32Array {
+  const freqs = [150, 220, 330, 500, 750, 1100, 1650, 2500];
+  let sum = 0;
+  for (const f of freqs) {
+    const w = (2 * Math.PI * f) / sr;
+    let re = 0;
+    let im = 0;
+    for (let n = 0; n < ir.length; n++) {
+      re += ir[n] * Math.cos(w * n);
+      im -= ir[n] * Math.sin(w * n);
+    }
+    sum += re * re + im * im;
+  }
+  const g = BAND_GAIN / Math.sqrt(sum / freqs.length);
+  for (let i = 0; i < ir.length; i++) ir[i] *= g;
+  return ir;
+}
+
+/** Target band gain, chosen to keep the overall level of the previous unit-energy IRs. */
+const BAND_GAIN = 1.4;

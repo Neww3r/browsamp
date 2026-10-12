@@ -107,6 +107,7 @@ export const FACTORY: Preset[] = [
   }),
   preset('Pushed Tweed', 0, { gain: 8.5, bass: 5, mid: 6, treble: 6, master: 7 }, (r) => {
     r.values.reverbMix = 15;
+    r.values.output = -16; // a cranked clean amp is much louder than at noon
   }),
   preset('Brit Crunch', 1, { gain: 5.5, bass: 5, mid: 7, treble: 6, presence: 5.5, master: 6 }, (r) => {
     r.values.reverbMix = 15;
@@ -122,9 +123,11 @@ export const FACTORY: Preset[] = [
     r.values.odLevel = 8;
     r.values.gate = -62;
     r.values.reverbMix = 8;
+    r.values.output = -6;
   }),
   preset('Obsidian Lead', 2, { gain: 8, bass: 5, mid: 6.5, treble: 5.5, master: 5 }, (r) => {
     r.values.gate = -66;
+    r.values.output = -6;
     r.on.delay = true;
     r.values.delayMix = 25;
     r.values.delayTime = 480;

@@ -20,6 +20,8 @@
   }
 </script>
 
+<svelte:window onkeydown={(e) => e.key === 'Escape' && (ui.settings = false)} />
+
 <div class="scrim" transition:fade={{ duration: 150 }} onclick={() => (ui.settings = false)} role="presentation"></div>
 <div class="modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" transition:fade={{ duration: 150 }}>
   <header>

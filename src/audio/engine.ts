@@ -207,13 +207,27 @@ export class Engine {
     this.setRaw('amp', AMP_TUNER_MUTE, mute ? 1 : 0);
   }
 
+  /** Raised-cosine crossfade: zero slope at both ends, so the switch has no audible kink. */
   private fadeTo(target: GainNode, level: number): void {
-    const t = this.ctx!.currentTime;
+    const ctx = this.ctx!;
+    const t = ctx.currentTime + 0.005;
+    const steps = 64;
     for (const g of [...this.convGains, this.cabBypass]) {
-      g.gain.cancelScheduledValues(t);
-      g.gain.setTargetAtTime(g === target ? level : 0, t, 0.01);
+      const from = g.gain.value;
+      const to = g === target ? level : 0;
+      g.gain.cancelScheduledValues(0);
+      g.gain.setValueAtTime(from, ctx.currentTime);
+      if (Math.abs(to - from) < 1e-4) {
+        g.gain.setValueAtTime(to, t);
+        continue;
+      }
+      const curve = new Float32Array(steps);
+      for (let i = 0; i < steps; i++) curve[i] = from + (to - from) * (0.5 - 0.5 * Math.cos((Math.PI * i) / (steps - 1)));
+      g.gain.setValueCurveAtTime(curve, t, Engine.CAB_FADE_S);
     }
   }
+
+  private static readonly CAB_FADE_S = 0.04;
 
   /**
    * Loads a cabinet IR into the idle convolver and crossfades to it (~30 ms).

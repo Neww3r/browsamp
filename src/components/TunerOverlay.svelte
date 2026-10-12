@@ -15,6 +15,8 @@
   ];
 
   let cents = $state(0);
+  /** Last reliable reading: shown while the note is held through a brief dropout. */
+  let freq = $state(0);
   let note = $state<{ name: string; octave: number } | null>(null);
   let clearTimer = 0;
 
@@ -37,11 +39,14 @@
     const c = (midi - n) * 100;
     cents = note && note.name === name ? cents + (c - cents) * 0.4 : c;
     note = { name, octave: Math.floor(n / 12) - 1 };
+    freq = f;
   }
 
   let inTune = $derived(note !== null && Math.abs(cents) < 3);
-  let nearest = $derived(ui.tunerFreq > 0 ? STRINGS.reduce((a, b) => (Math.abs(Math.log2(b.f / ui.tunerFreq)) < Math.abs(Math.log2(a.f / ui.tunerFreq)) ? b : a)) : null);
+  let nearest = $derived(note ? STRINGS.reduce((a, b) => (Math.abs(Math.log2(b.f / freq)) < Math.abs(Math.log2(a.f / freq)) ? b : a)) : null);
 </script>
+
+<svelte:window onkeydown={(e) => e.key === 'Escape' && setTuner(false)} />
 
 <div class="tuner" transition:fade={{ duration: 160 }} role="dialog" aria-label="Accordeur">
   <button class="close" onclick={() => setTuner(false)} aria-label="Fermer l'accordeur"><Icon name="close" size={26} /></button>
@@ -67,7 +72,7 @@
   </div>
 
   <div class="readout">
-    {#if note}{ui.tunerFreq.toFixed(1)} Hz · {cents >= 0 ? '+' : ''}{cents.toFixed(0)} cents{:else if !session.running}L'audio est arrêté{:else}Jouez une corde à vide{/if}
+    {#if note}{freq.toFixed(1)} Hz · {cents >= 0 ? '+' : ''}{cents.toFixed(0)} cents{:else if !session.running}L'audio est arrêté{:else}Jouez une corde à vide{/if}
   </div>
 
   <div class="actions">

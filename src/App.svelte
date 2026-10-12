@@ -14,9 +14,22 @@
   let vw = $state(window.innerWidth);
   let vh = $state(window.innerHeight);
   let scale = $derived(Math.min(vw / W, vh / H));
+  // In portrait on a phone the stage would shrink to a quarter of its size.
+  let portraitDismissed = $state(false);
+  let portrait = $derived(vw < 700 && vh > vw && !portraitDismissed);
 </script>
 
 <svelte:window bind:innerWidth={vw} bind:innerHeight={vh} />
+
+{#if portrait}
+  <div class="rotate" role="dialog" aria-label="Orientation">
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+      <rect x="7" y="2" width="10" height="20" rx="2" /><path d="M3 9a9 9 0 0 1 4-5M21 15a9 9 0 0 1-4 5" />
+    </svg>
+    <p>Tournez l'appareil à l'horizontale : l'ampli est fait pour un écran large.</p>
+    <button class="btn" onclick={() => (portraitDismissed = true)}>Continuer quand même</button>
+  </div>
+{/if}
 
 <div class="viewport">
   <div class="stage" style:width="{W}px" style:height="{H}px" style:transform="translate(-50%, -50%) scale({scale})">
@@ -61,6 +74,28 @@
   .scene {
     position: absolute;
     inset: 0;
+  }
+  .rotate {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: 32px;
+    text-align: center;
+    background: #0d0c0b;
+    color: #e8e1d6;
+  }
+  .rotate svg {
+    color: var(--accent);
+  }
+  .rotate p {
+    margin: 0;
+    max-width: 300px;
+    font: 17px/1.5 var(--body-font);
   }
   .toast {
     position: absolute;

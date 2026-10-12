@@ -48,7 +48,7 @@ pub const MODELS: [ModelDef; 3] = [
         sag: 0.35,
         resonance_hz: 90.0,
         presence_hz: 4000.0,
-        out_gain: 2.5,
+        out_gain: 2.0,
     },
     ModelDef {
         name: "Crunch",

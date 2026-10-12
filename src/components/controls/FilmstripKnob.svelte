@@ -43,7 +43,10 @@
 
   let lastY = 0;
   function down(e: PointerEvent) {
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    const el = e.currentTarget as HTMLElement;
+    el.setPointerCapture(e.pointerId);
+    // preventDefault below also prevents focus: give it explicitly so arrow keys work after a click.
+    el.focus({ preventScroll: true });
     lastY = e.clientY;
     dragging = true;
     e.preventDefault();

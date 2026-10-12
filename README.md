@@ -51,7 +51,7 @@ npm run art -- --fast knobs       # aperçu rapide, peu d'échantillons
 - `art/blender/` modélise et rend : `lib.py` (scène, lumières, matériaux procéduraux), `knobs.py`, `amps.py` ;
 - `art/build.py` enchaîne le tout et assemble les planches de potards (grille 8×8, ombre portée incluse) en WebP.
 
-Blender est attendu dans `/Applications/Blender.app`. `art/placeholders.py` génère des images provisoires sans Blender.
+Blender est attendu dans `/Applications/Blender.app`. Sans Blender, `python3 art/placeholders.py` complète les images manquantes de `public/art/` par des versions provisoires (même géométrie, mêmes sérigraphies) ; il ne remplace les rendus existants qu'avec `--force`.
 
 ## Chaîne de traitement
 
