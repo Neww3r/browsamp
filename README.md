@@ -21,7 +21,7 @@ En dev, toute modification d'un fichier `dsp/src/*.rs` recompile le WASM et rech
 
 ## En ligne
 
-https://browsamp-fr8mpb7pwb.kazibo.app (Chrome recommandé).
+https://browsamp.kazibo.app (Chrome recommandé).
 
 Déploiement sur Kazibo : la VM NixOS sert le build publié en asset de release GitHub, épinglé par son empreinte ([deploy/kazibo/configuration.nix](deploy/kazibo/configuration.nix)). Pour une nouvelle version : `npm run build`, `tar -C dist -czf browsamp-dist.tar.gz .`, publier une release avec l'archive, mettre à jour `version` et `hash` dans la configuration, redéployer.
 
