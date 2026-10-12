@@ -7,6 +7,15 @@
   let saving = $state(false);
   let name = $state('');
   let input: HTMLInputElement | undefined = $state();
+  let root: HTMLDivElement | undefined = $state();
+
+  /** Menus close on a click anywhere else, like any dropdown. */
+  function outside(e: PointerEvent) {
+    if ((open || saving) && root && !root.contains(e.target as Node)) {
+      open = false;
+      saving = false;
+    }
+  }
 
   function startSave() {
     name = presets.current && !isFactory(presets.current) ? presets.current : '';
@@ -34,7 +43,7 @@
   }
 </script>
 
-<div class="browser">
+<div class="browser" bind:this={root}>
   <button class="arrow" onclick={() => stepPreset(-1)} aria-label="Preset précédent"><Icon name="prev" /></button>
   <button class="name" onclick={() => (open = !open)} aria-expanded={open}>
     <span class="text">{presets.current ?? 'Sans titre'}{presets.dirty ? ' *' : ''}</span>
@@ -77,7 +86,7 @@
   {/if}
 </div>
 
-<svelte:window onkeydown={(e) => e.key === 'Escape' && ((open = false), (saving = false))} />
+<svelte:window onkeydown={(e) => e.key === 'Escape' && ((open = false), (saving = false))} onpointerdown={outside} />
 
 <style>
   .browser {

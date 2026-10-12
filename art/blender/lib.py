@@ -20,7 +20,10 @@ OUT = ART / "out"
 DPR = 2  # texture pixels per stage pixel (printing, logos)
 SCALE = 3  # rendered pixels per stage pixel: covers 5K screens; smaller variants are derived
 CANVAS = LAYOUT["canvas"]  # backgrounds extend past the 1600x1000 safe area to fill any window
-TILT = 18  # degrees: knobs and switches are seen slightly from above, showing their sides
+# Knobs and switches are seen slightly from above so a sliver of their sides shows. Kept small:
+# the panels are rendered straight on, and a steeper view makes knob faces look off-centre
+# from the scales printed around them.
+TILT = 8
 
 
 # ---------------------------------------------------------------- scene
@@ -502,6 +505,7 @@ def mat_cloth(name, base, thread, scale=28, gold=None):
         wv.inputs["Scale"].default_value = scale
         wv.inputs["Distortion"].default_value = 0.4
         m.link(vec, wv.inputs["Vector"])
+    # Over/under weave: each thread shows where the other dips.
     weave = m.math("MULTIPLY", wx.outputs["Fac"], wz.outputs["Fac"])
     n = m.noise(vec, 6, 4)
     col = m.mix(m.math("MULTIPLY", weave, 1.3, clamp=True), base, thread)
@@ -515,7 +519,7 @@ def mat_cloth(name, base, thread, scale=28, gold=None):
         mask = m.math("LESS_THAN", fleck.outputs["Distance"], 0.12)
         m.to("Base Color", m.mix(mask, col, gold))
         m.to("Metallic", m.math("MULTIPLY", mask, 0.9))
-    m.to("Normal", m.bump(weave, 0.6, 0.004))
+    m.to("Normal", m.bump(weave, 1.0, 0.006))
     return m.mat
 
 

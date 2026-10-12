@@ -208,16 +208,19 @@ def build_pedal(d):
 
 
 def build_header(d):
-    """Compact machined knob for the global controls, with an amber index."""
-    knurl = mat_knurl("Knurl", (0.7, 0.71, 0.73), 0.32, 50)
-    alu = mat_spun("Alu", (0.8, 0.8, 0.82), 0.16)
-    amber = lib.M("Amber").set(Base_Color=(0.9, 0.5, 0.1, 1), Emission_Color=(1.0, 0.6, 0.18, 1), Emission_Strength=3, Roughness=0.4).mat
+    """Compact machined knob for the global controls: knurled aluminium skirt, black face and
+    a bright amber index that stays readable at small sizes."""
+    knurl = mat_knurl("Knurl", (0.72, 0.73, 0.75), 0.3, 50)
+    black = lib.M("Anodised").set(Base_Color=(0.014, 0.014, 0.016, 1), Metallic=0.6, Roughness=0.3).mat
+    alu = mat_spun("Alu", (0.82, 0.82, 0.84), 0.14)
+    amber = lib.M("Amber").set(Base_Color=(1.0, 0.55, 0.12, 1), Emission_Color=(1.0, 0.58, 0.16, 1), Emission_Strength=6, Roughness=0.4).mat
     R = d / 2
     body = [(0, -0.26), (R * 0.9, -0.26), (R * 0.92, -0.24), (R * 0.92, -0.03), (R * 0.88, 0.0)]
     objs = [lathe("Knurl", body, knurl)]
-    face = rounded([(0, -0.3), (R * 0.66, -0.3), (R * 0.86, -0.27), (R * 0.9, -0.25)], 0.01)
-    objs.append(lathe("Face", face, alu))
-    objs.append(line_mark("Line", R * 0.18, R * 0.62, 0.03, -0.302, amber))
+    ring = rounded([(0, -0.29), (R * 0.72, -0.29), (R * 0.86, -0.27), (R * 0.9, -0.25)], 0.01)
+    objs.append(lathe("Ring", ring, alu))
+    objs.append(lathe("Face", [(0, -0.296), (R * 0.68, -0.296), (R * 0.7, -0.29)], black))
+    objs.append(line_mark("Line", R * 0.14, R * 0.66, 0.05, -0.298, amber))
     return objs
 
 
@@ -231,16 +234,32 @@ BUILDERS = {
 
 
 def setup_object_render(size_px, pad, samples):
-    """Transparent, tilted, shadow-catching setup for anything sitting on a panel."""
+    """Transparent, shadow-catching setup for anything sitting on a panel. The camera is
+    added by frame_object once the object exists."""
     frame_px = round(size_px * pad * lib.SCALE)
     lib.reset()
     lib.render_settings(frame_px, frame_px, samples, transparent=True)
-    cam = lib.camera((lib.STAGE_W / 2, lib.STAGE_H / 2), size_px * pad, tilt_deg=lib.TILT)
-    t = math.radians(lib.TILT)
-    cam.location = (0, -40 * math.cos(t), 40 * math.sin(t))
     lib.studio()
     catcher = lib.front_plane("Catcher", -4, -4, 4, 4, 0.0, lib.mat_plastic("Catcher", (0.5, 0.5, 0.5)))
     catcher.is_shadow_catcher = True
+
+
+def front_y(objs):
+    """Depth of the part closest to the camera (the knob face, the switch cap)."""
+    from mathutils import Vector
+
+    return min((o.matrix_world @ Vector(c)).y for o in objs if o.type == "MESH" for c in o.bound_box)
+
+
+def frame_object(size_px, pad, focus_y):
+    """Tilted orthographic camera centred on the point of the axis at depth focus_y.
+
+    Centring on the face (not the base) keeps what the eye reads as the knob, and the axis
+    its pointer turns around, exactly on the position of the scale printed on the panel."""
+    cam = lib.camera((lib.STAGE_W / 2, lib.STAGE_H / 2), size_px * pad, tilt_deg=lib.TILT)
+    t = math.radians(lib.TILT)
+    cam.location = (0, focus_y - 40 * math.cos(t), 40 * math.sin(t))
+    return cam
 
 
 def render_style(style, samples=64, frames=None):
@@ -249,8 +268,10 @@ def render_style(style, samples=64, frames=None):
     setup_object_render(size_px, lib.LAYOUT["knobStrip"]["pad"], samples)
     root = bpy.data.objects.new("Knob", None)
     bpy.context.collection.objects.link(root)
-    for o in BUILDERS[style](size_px / 100):
+    objs = BUILDERS[style](size_px / 100)
+    for o in objs:
         o.parent = root
+    frame_object(size_px, lib.LAYOUT["knobStrip"]["pad"], front_y(objs))
     out = lib.OUT / f"knob-{style}"
     for f in range(n_frames):
         t = f / (n_frames - 1)

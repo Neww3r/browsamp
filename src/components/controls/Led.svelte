@@ -7,11 +7,13 @@
     color?: string;
     /** Light only: lights up a lamp that is part of the rendered background. */
     glow?: boolean;
+    /** Radius of the rendered glass, in stage pixels (glow mode). */
+    lens?: number;
   }
-  let { on, x, y, size = 14, color = '#ff3b2f', glow = false }: Props = $props();
+  let { on, x, y, size = 14, color = '#ff3b2f', glow = false, lens = 8 }: Props = $props();
 </script>
 
-<div class="led" class:on class:glow style:left="{x}px" style:top="{y}px" style:width="{size}px" style:height="{size}px" style:--c={color}></div>
+<div class="led" class:on class:glow style:left="{x}px" style:top="{y}px" style:width="{size}px" style:height="{size}px" style:--c={color} style:--lens="{lens}px"></div>
 
 <style>
   .led {
@@ -29,9 +31,12 @@
       0 0 6px 1px var(--c),
       0 0 22px 6px color-mix(in srgb, var(--c) 45%, transparent);
   }
+  /* Off: shade the rendered glass, which otherwise reads as lit. On: light it up. */
   .led.glow {
-    background: none;
+    background: radial-gradient(circle var(--lens), rgba(8, 4, 4, 0.6) 0%, rgba(8, 4, 4, 0.5) 75%, transparent 100%);
     box-shadow: none;
+  }
+  .led.glow.on {
     mix-blend-mode: screen;
   }
   .led.glow.on {

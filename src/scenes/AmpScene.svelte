@@ -10,6 +10,13 @@
 
   const JEWEL = ['#ff3b2f', '#ff3b2f', '#3fa9ff'];
   let amp = $derived(LAYOUT.amps[rig.model]);
+
+  /** Reads a knob on the numbers printed around it (1–12 on the tweed panel, 0–10 elsewhere). */
+  function onScale(key: string) {
+    const def = PARAM[key];
+    const [lo, hi] = amp.scale;
+    return (v: number) => (lo + ((v - def.min) / (def.max - def.min)) * (hi - lo)).toFixed(1);
+  }
 </script>
 
 {#key rig.model}
@@ -22,12 +29,13 @@
         onchange={(v) => setValue(k.key, v)}
         size={amp.knobSize}
         sheet={amp.knobStyle}
+        format={onScale(k.key)}
         x={k.x}
         y={amp.knobY}
         label={null}
       />
     {/each}
-    <Led on={session.running} x={amp.jewel.x} y={amp.jewel.y} size={40} color={JEWEL[rig.model]} glow />
+    <Led on={session.running} x={amp.jewel.x} y={amp.jewel.y} size={44} color={JEWEL[rig.model]} glow lens={17} />
     <PowerSwitch on={session.running} busy={session.starting} x={amp.power.x} y={amp.power.y} ontoggle={togglePower} />
   </div>
 {/key}

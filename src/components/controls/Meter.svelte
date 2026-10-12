@@ -6,17 +6,24 @@
     source: () => AnalyserNode | null;
     height?: number;
     width?: number;
+    label?: string;
   }
-  let { source, height = 52, width = 7 }: Props = $props();
+  let { source, height = 58, width = 8, label = 'Niveau' }: Props = $props();
+
+  // LED segments from -48 dBFS (bottom) to 0 dBFS (top), like a hardware meter.
+  const SEGMENTS = 16;
+  const FLOOR = -48;
+  const segDb = Array.from({ length: SEGMENTS }, (_, i) => FLOOR + ((i + 1) * -FLOOR) / SEGMENTS);
+  const color = (db: number) => (db > -3 ? 'red' : db > -12 ? 'amber' : 'green');
 
   let level = $state(-90);
   let hold = $state(-90);
-  let clip = $state(false);
+  /** Latched until clicked: a single over is easy to miss on a moving meter. */
+  let clipped = $state(false);
 
   onMount(() => {
     let buf = new Float32Array(2048);
     let holdUntil = 0;
-    let clipUntil = 0;
     let raf = 0;
     const tick = (now: number) => {
       const an = source();
@@ -27,52 +34,86 @@
         for (let i = 0; i < buf.length; i++) peak = Math.max(peak, Math.abs(buf[i]));
       }
       const db = peak > 0 ? 20 * Math.log10(peak) : -90;
-      level = db > level ? db : Math.max(db, level - 1.2);
+      level = db > level ? db : Math.max(db, level - 1.0); // ~60 dB/s fall
       if (db >= hold) {
         hold = db;
-        holdUntil = now + 1200;
-      } else if (now > holdUntil) hold = Math.max(db, hold - 0.6);
-      if (peak >= 0.99) clipUntil = now + 1500;
-      clip = now < clipUntil;
+        holdUntil = now + 1500;
+      } else if (now > holdUntil) hold = Math.max(db, hold - 0.5);
+      if (peak >= 0.995) clipped = true;
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   });
 
-  const pos = (d: number) => Math.max(0, Math.min(1, (d + 60) / 60));
+  const HALF = -FLOOR / SEGMENTS / 2;
+  /** Index of the highest segment the peak-hold reaches. */
+  let holdSeg = $derived.by(() => {
+    let i = -1;
+    while (i + 1 < SEGMENTS && hold >= segDb[i + 1] - HALF) i++;
+    return i;
+  });
 </script>
 
-<div class="meter" class:clip style:--h="{height}px" style:height="{height}px" style:width="{width}px" title="{hold <= -89 ? '-∞' : hold.toFixed(1)} dBFS">
-  <div class="bar" style:height="{pos(level) * 100}%"></div>
-  <div class="hold" style:bottom="{pos(hold) * 100}%"></div>
+<div class="meter" style:height="{height}px" style:width="{width}px">
+  <button
+    class="clip"
+    class:on={clipped}
+    onclick={() => (clipped = false)}
+    title={clipped ? 'Écrêtage détecté : cliquez pour réinitialiser' : 'Témoin d’écrêtage'}
+    aria-label="{label} : témoin d’écrêtage{clipped ? ' (allumé)' : ''}"
+  ></button>
+  <div class="segs" role="meter" aria-label={label} aria-valuemin={FLOOR} aria-valuemax={0} aria-valuenow={Math.max(FLOOR, Math.round(level))}>
+    {#each segDb as d, i (i)}
+      <span class="seg {color(d)}" class:lit={level >= d - HALF} class:hold={i === holdSeg && hold > FLOOR}></span>
+    {/each}
+  </div>
 </div>
 
 <style>
   .meter {
-    position: relative;
-    border-radius: 3px;
-    background: #0b0a09;
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.06);
-    overflow: hidden;
-  }
-  .bar {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(0deg, #3fbf5f 0%, #3fbf5f 70%, #e8b13c 85%, #e5483c 100%);
-    background-size: 100% var(--h);
-    background-position: bottom;
-  }
-  .hold {
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: #f3ede4;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
   }
   .clip {
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 0 1px #e5483c, 0 0 8px #e5483c;
+    flex: 0 0 5px;
+    padding: 0;
+    border: 0;
+    border-radius: 1.5px;
+    background: #3a1714;
+    cursor: pointer;
+  }
+  .clip.on {
+    background: #ff3b2f;
+    box-shadow: 0 0 6px #ff3b2f;
+  }
+  .segs {
+    flex: 1;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 1px;
+    padding: 1px;
+    border-radius: 2px;
+    background: rgba(6, 6, 6, 0.75);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  }
+  .seg {
+    flex: 1;
+    border-radius: 1px;
+    opacity: 0.16;
+  }
+  .seg.green {
+    background: #4fd16b;
+  }
+  .seg.amber {
+    background: #f0b43c;
+  }
+  .seg.red {
+    background: #ff4a3a;
+  }
+  .seg.lit,
+  .seg.hold {
+    opacity: 1;
   }
 </style>

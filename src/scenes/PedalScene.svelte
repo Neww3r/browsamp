@@ -31,7 +31,7 @@
         label={null}
       />
     {/each}
-    <Led on={rig.on[p.id]} x={p.cx + P.led.dx} y={p.cy + P.led.dy} size={34} glow />
+    <Led on={rig.on[p.id]} x={p.cx + P.led.dx} y={p.cy + P.led.dy} size={34} glow lens={8} />
     <Footswitch on={rig.on[p.id]} label="{p.name} on/off" x={p.cx + P.footswitch.dx} y={p.cy + P.footswitch.dy} r={P.footswitch.r} ontoggle={() => toggleFx(p.id)} />
   {/each}
 </div>

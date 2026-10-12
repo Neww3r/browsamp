@@ -7,7 +7,7 @@
   import TunerOverlay from './components/TunerOverlay.svelte';
   import { view } from './lib/assets.svelte';
   import { LAYOUT } from './lib/layout';
-  import { ui } from './lib/rig.svelte';
+  import { presets, setTuner, ui, type SceneId } from './lib/rig.svelte';
   import AmpScene from './scenes/AmpScene.svelte';
   import CabScene from './scenes/CabScene.svelte';
   import PedalScene from './scenes/PedalScene.svelte';
@@ -35,12 +35,32 @@
     return () => mq.removeEventListener('change', update);
   });
 
+  // Tab title follows the preset, so a pinned tab says what is loaded.
+  $effect(() => {
+    document.title = presets.current ? `${presets.current}${presets.dirty ? ' *' : ''} · browsamp` : 'browsamp';
+  });
+
+  // Keyboard: 1–4 switch scenes, T opens the tuner. Ignored while typing or with modifiers.
+  const SCENES: SceneId[] = ['pre', 'amp', 'cab', 'post'];
+  function shortcut(e: KeyboardEvent) {
+    if (e.metaKey || e.ctrlKey || e.altKey || ui.settings) return;
+    if (e.target instanceof Element && e.target.closest('input, select, textarea, [contenteditable]')) return;
+    const n = Number(e.key);
+    if (n >= 1 && n <= 4) {
+      ui.scene = SCENES[n - 1];
+      e.preventDefault();
+    } else if (e.key === 't' || e.key === 'T') {
+      setTuner(!ui.tuner);
+      e.preventDefault();
+    }
+  }
+
   // In portrait on a phone the stage would shrink to a quarter of its size.
   let portraitDismissed = $state(false);
   let portrait = $derived(vw < 700 && vh > vw && !portraitDismissed);
 </script>
 
-<svelte:window bind:innerWidth={vw} bind:innerHeight={vh} />
+<svelte:window bind:innerWidth={vw} bind:innerHeight={vh} onkeydown={shortcut} />
 
 {#if portrait}
   <div class="rotate" role="dialog" aria-label="Orientation">

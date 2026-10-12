@@ -70,8 +70,8 @@ def knob_scale(d, cx, cy, radius, style, f_num, ink):
 
 AMP_PRINT = {
     "sunset": dict(font=("josefin-sans", 600, 13.5), tracking=0.16, ink=(24, 20, 16, 255), scale="numbers12", num=("josefin-sans", 600, 10), radius=55, frame=None),
-    "brixton": dict(font=("oswald", 500, 14), tracking=0.18, ink=(16, 12, 6, 255), scale="dots", num=None, radius=50, frame=(16, 12, 6, 255)),
-    "obsidian": dict(font=("oswald", 500, 13), tracking=0.3, ink=(214, 218, 224, 255), scale="ticks", num=None, radius=52, frame=None),
+    "brixton": dict(font=("oswald", 500, 14), tracking=0.18, ink=(16, 12, 6, 255), scale="dots", num=None, radius=55, frame=(16, 12, 6, 255)),
+    "obsidian": dict(font=("oswald", 500, 13), tracking=0.3, ink=(214, 218, 224, 255), scale="ticks", num=None, radius=57, frame=None),
 }
 
 

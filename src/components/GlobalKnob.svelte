@@ -21,7 +21,7 @@
     <FilmstripKnob {def} value={getValue(param)} onchange={(v) => setValue(param, v)} size={SIZE} sheet="header" x={SIZE / 2 + 8} y={SIZE / 2 + 6} label={null} showValue />
   </div>
   {#if meter}
-    <div class="meter"><Meter source={meter} height={58} width={6} /></div>
+    <div class="meter"><Meter source={meter} height={64} width={8} label={def.label} /></div>
   {/if}
 </div>
 
@@ -55,7 +55,7 @@
   }
   .meter {
     position: absolute;
-    left: 74px;
-    top: 24px;
+    left: 72px;
+    top: 18px;
   }
 </style>

@@ -10,3 +10,4 @@ captures/
 .claude/
 *.tar.gz
 !src/wasm/.gitkeep
+__pycache__/

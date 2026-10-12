@@ -195,7 +195,7 @@ def mat_red_cavity():
 
 def build_sunset(a):
     tweed = lib.mat_tweed("Tweed")
-    cloth = lib.mat_cloth("Oxblood", (0.06, 0.02, 0.013), (0.30, 0.17, 0.08), scale=30)
+    cloth = lib.mat_cloth("Oxblood", (0.05, 0.016, 0.01), (0.36, 0.2, 0.09), scale=24)
     chrome = lib.mat_metal("Chrome", (0.92, 0.92, 0.93), 0.1, aniso=0.5, brushed_axis="UV")
     grille = a["grille"]
     shell("Head", a["head"], [grille, a["panel"]], tweed)
@@ -210,13 +210,13 @@ def build_sunset(a):
     cabinet(tweed, cloth)
     wall(mat_wood_planks())
     lib.studio(key=2.3, warmth=(1.0, 0.9, 0.78))
-    lib.spot("WallPool", (0, -2, 9), (0, 5, 2.5), 9000, 120, 1.0, (1.0, 0.72, 0.42), 1.0)
+    lib.spot("WallPool", (0, -2, 9), (0, 5, 2.5), 9000, 175, 1.0, (1.0, 0.72, 0.42), 1.0)
     lib.area("Rim", (0, 3.5, 5), (0, 0, 1), 6, 1200, (1.0, 0.8, 0.6), size_y=2)
 
 
 def build_brixton(a):
     tolex = lib.mat_tolex_levant("Tolex")
-    cloth = lib.mat_cloth("Basketweave", (0.006, 0.006, 0.006), (0.045, 0.04, 0.032), scale=24, gold=(0.5, 0.38, 0.16))
+    cloth = lib.mat_cloth("Basketweave", (0.005, 0.005, 0.005), (0.07, 0.062, 0.05), scale=20, gold=(0.5, 0.38, 0.16))
     gold = lib.mat_metal("GoldPanel", (0.83, 0.62, 0.27), 0.28, aniso=0.6, brushed_axis="UV")
     chrome = lib.mat_metal("Chrome", (0.92, 0.92, 0.93), 0.08)
     white = lib.mat_plastic("Piping", (0.82, 0.8, 0.74), 0.35, coat=0.3)
@@ -234,7 +234,7 @@ def build_brixton(a):
     cabinet(tolex, cloth, white)
     wall(mat_brick())
     lib.studio(key=2.6, warmth=(1.0, 0.93, 0.84))
-    lib.spot("WallPool", (0, -1, 9), (0, 5, 2.0), 11000, 120, 1.0, (1.0, 0.68, 0.38), 0.8)
+    lib.spot("WallPool", (0, -1, 9), (0, 5, 2.0), 11000, 175, 1.0, (1.0, 0.68, 0.38), 0.8)
     lib.area("RimL", (-9, 3, 3), (0, 0, 0), 4, 900, (1.0, 0.7, 0.45))
     lib.area("RimR", (9, 3, 3), (0, 0, 0), 4, 900, (1.0, 0.7, 0.45))
 
@@ -263,7 +263,7 @@ def build_obsidian(a):
     cabinet(steel, cab_grille.mat)
     wall(mat_concrete())
     lib.studio(key=2.6, warmth=(0.92, 0.95, 1.0))
-    lib.spot("WallPool", (0, -1, 9), (0, 5, 2.5), 6000, 120, 1.0, (0.55, 0.7, 1.0), 0.8)
+    lib.spot("WallPool", (0, -1, 9), (0, 5, 2.5), 6000, 175, 1.0, (0.55, 0.7, 1.0), 0.8)
     lib.area("RimL", (-9, 3, 2), (0, 0, 0), 4, 1400, (0.4, 0.6, 1.0))
     lib.area("RimR", (9, 3, 2), (0, 0, 0), 4, 1400, (1.0, 0.25, 0.15))
 

@@ -53,6 +53,16 @@
     {session.running ? (session.withInput ? 'Ampli allumé : l’entrée audio est ouverte.' : 'Ampli allumé, sans entrée audio.') : 'Ampli éteint : allumez-le avec l’interrupteur POWER sur sa façade.'}
   </p>
 
+  <section class="keys">
+    <h3>Raccourcis</h3>
+    <dl>
+      <div><dt>1 – 4</dt><dd>Pédales, ampli, baffle, effets</dd></div>
+      <div><dt>T</dt><dd>Accordeur</dd></div>
+      <div><dt>Molette</dt><dd>Tourner un potard (avec Maj ou Cmd : réglage fin)</dd></div>
+      <div><dt>Double-clic</dt><dd>Valeur par défaut</dd></div>
+    </dl>
+  </section>
+
   <section class="lat">
     <h3>Latence</h3>
     {#if session.latency}
@@ -63,7 +73,7 @@
         <div><dt>Sortie</dt><dd>{ms(session.latency.output)} ms</dd></div>
       </dl>
     {:else}
-      <p>Démarrez l'audio pour voir la latence.</p>
+      <p>Allumez l'ampli pour voir la latence.</p>
     {/if}
     <button class="btn" disabled={!session.running || !session.withInput || measuring} onclick={rtt}>
       {measuring ? 'Mesure…' : "Mesurer l'aller-retour"}
@@ -149,6 +159,38 @@
   }
   .status.on {
     color: #a8e8b4;
+  }
+  .keys {
+    display: grid;
+    gap: 12px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+  }
+  .keys dl {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 24px;
+  }
+  .keys div {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .keys dt {
+    flex: 0 0 auto;
+    min-width: 34px;
+    padding: 3px 7px;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #e8e1d6;
+    text-align: center;
+    letter-spacing: 0.02em;
+    text-transform: none;
+  }
+  .keys dd {
+    margin: 0;
+    font: 14px/1.35 var(--body-font);
+    color: #c8bfb3;
   }
   .lat {
     display: grid;

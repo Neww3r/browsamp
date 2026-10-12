@@ -81,8 +81,14 @@ function send(def: ParamDef): void {
   engine.setParam(def, effective(def, getValue(def.key)));
 }
 
+let offHintShown = false;
+
 export function setValue(key: string, v: number): void {
   const def = PARAM[key];
+  if (!session.running && !session.starting && !offHintShown && def.target !== 'cab') {
+    offHintShown = true;
+    toast("L'ampli est éteint : actionnez son interrupteur POWER pour l'entendre.");
+  }
   if (isAmpKnob(key)) rig.amps[rig.model][key] = v;
   else rig.values[key] = v;
   send(def);
@@ -312,7 +318,7 @@ export async function start(withInput: boolean): Promise<boolean> {
         ? "Accès à l'entrée audio refusé. Autorisez le micro pour ce site."
         : err.name === 'NotFoundError'
           ? 'Aucune entrée audio trouvée.'
-          : `Impossible de démarrer : ${err.message}`,
+          : `Impossible d’allumer l’ampli : ${err.message}`,
     );
     session.running = false;
     return false;

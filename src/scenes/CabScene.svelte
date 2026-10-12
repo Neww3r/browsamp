@@ -45,8 +45,13 @@
   const micLabel = (i: number) => {
     const m = rig.cab.mics[i];
     const r = Math.min(1, Math.hypot(m.x, m.y));
-    return r < 0.15 ? 'Centre' : r > 0.8 ? 'Bord' : `${Math.round(r * 100)} %`;
+    return r < 0.12 ? 'centre du cône' : r > 0.88 ? 'bord du cône' : `${Math.round(r * 100)} % vers le bord`;
   };
+
+  let mic2On = $derived(getValue('mic2Level') > -29.9);
+  function toggleMic2() {
+    setValue('mic2Level', mic2On ? -30 : -6);
+  }
 </script>
 
 <div class="cab" class:dim={!micsActive}>
@@ -89,7 +94,7 @@
     {/each}
   </div>
 
-  <aside class="panel" style:left="{PANEL.x}px" style:top="{PANEL.y}px" style:width="{PANEL.w}px" style:height="{PANEL.h}px">
+  <aside class="panel" style:left="{PANEL.x}px" style:top="{PANEL.y}px" style:width="{PANEL.w}px" style:max-height="{PANEL.h}px">
     <div class="seg" role="radiogroup" aria-label="Source du baffle">
       {#each [['mics', 'Micros'], ['ir', 'IR perso'], ['off', 'Bypass']] as [mode, label] (mode)}
         <button
@@ -97,55 +102,71 @@
           aria-checked={rig.cab.mode === mode}
           class:on={rig.cab.mode === mode}
           disabled={mode === 'ir' && !session.userIr}
+          title={mode === 'ir' && !session.userIr ? 'Chargez d’abord une IR (.wav) avec le bouton en bas du panneau' : undefined}
           onclick={() => setCab({ mode: mode as 'mics' | 'ir' | 'off' })}>{label}</button
         >
       {/each}
     </div>
 
-    {#if rig.cab.mode === 'ir' || !micsActive}
-      <div class="ir">
-        <p>{rig.cab.mode === 'off' ? 'Baffle désactivé : pour un baffle réel ou un chargeur d’IR externe.' : `IR : ${session.userIr?.name ?? '—'}`}</p>
-      </div>
+    {#if rig.cab.mode === 'ir'}
+      <p class="hint">Réponse impulsionnelle chargée : <b>{session.userIr?.name ?? '—'}</b></p>
+    {:else if rig.cab.mode === 'off'}
+      <p class="hint">Baffle désactivé : pour jouer dans un vrai baffle ou un chargeur d’IR externe.</p>
     {/if}
 
+    {#if micsActive}
     <label class="field">
       <span>Baffle</span>
-      <select value={rig.cab.cabinet} disabled={!micsActive} onchange={(e) => setCab({ cabinet: Number((e.target as HTMLSelectElement).value) })}>
+      <select value={rig.cab.cabinet} onchange={(e) => setCab({ cabinet: Number((e.target as HTMLSelectElement).value) })}>
         <option value={-1}>Auto ({CABINETS[activeCabinet()]})</option>
         {#each CABINETS as name, i (name)}
           <option value={i}>{name}</option>
         {/each}
       </select>
     </label>
+    {/if}
 
-    {#each [0, 1] as i (i)}
-      <section class="micbox" class:off={i === 1 && getValue('mic2Level') <= -29.9}>
-        <header>
-          <span class="num">{i + 1}</span>
-          <div class="seg small">
-            {#each [0, 1] as t (t)}
-              <button class:on={rig.cab.mics[i].type === t} disabled={!micsActive} onclick={() => ((rig.cab.mics[i].type = t as MicType), setCab({}))}>{MIC_NAME[t]}</button>
-            {/each}
-          </div>
-          <span class="pos">{micLabel(i)}</span>
-        </header>
-        <div class="knobs">
-          {#each [`mic${i + 1}Dist`, `mic${i + 1}Level`] as key, j (key)}
-            <FilmstripKnob
-              def={PARAM[key]}
-              value={getValue(key)}
-              onchange={(v) => setValue(key, v)}
-              size={58}
-              sheet="header"
-              x={110 + j * 180}
-              y={52}
-              labelDy={44}
-              labelClass="cab-label"
-            />
-          {/each}
-        </div>
-      </section>
-    {/each}
+    {#if micsActive}
+      {#each [0, 1] as i (i)}
+        {@const enabled = i === 0 || mic2On}
+        <section class="micbox" class:off={!enabled}>
+          <header>
+            <span class="num">{i + 1}</span>
+            <span class="title">Micro {i + 1}</span>
+            {#if i === 1}
+              <button class="switch" role="switch" aria-checked={mic2On} aria-label="Activer le micro 2" title={mic2On ? 'Désactiver le micro 2' : 'Ajouter un second micro'} onclick={toggleMic2}></button>
+            {/if}
+          </header>
+          {#if enabled}
+            <div class="seg small" role="radiogroup" aria-label="Type du micro {i + 1}">
+              {#each [0, 1] as t (t)}
+                <button role="radio" aria-checked={rig.cab.mics[i].type === t} class:on={rig.cab.mics[i].type === t} onclick={() => ((rig.cab.mics[i].type = t as MicType), setCab({}))}>{MIC_NAME[t]}</button>
+              {/each}
+            </div>
+            <p class="pos">Position : <b>{micLabel(i)}</b></p>
+            <div class="knobs">
+              {#each [`mic${i + 1}Dist`, `mic${i + 1}Level`] as key, j (key)}
+                <FilmstripKnob
+                  def={PARAM[key]}
+                  value={getValue(key)}
+                  onchange={(v) => setValue(key, v)}
+                  size={54}
+                  sheet="header"
+                  x={100 + j * 170}
+                  y={50}
+                  labelDy={-42}
+                  labelClass="cab-label"
+                  showValue
+                />
+              {/each}
+            </div>
+          {:else}
+            <p class="hint">Un second micro, mélangé au premier, élargit le son (par exemple dynamique au centre et ruban sur le bord).</p>
+          {/if}
+        </section>
+      {/each}
+      <p class="hint">Glissez les micros sur le haut-parleur : vers le centre le son est plus brillant, vers le bord plus doux.</p>
+    {/if}
 
     <label class="load">
       <Icon name="upload" size={18} /> Charger une IR (.wav)
@@ -258,10 +279,14 @@
     height: 30px;
     font-size: 13px;
   }
-  .ir p {
+  .hint {
     margin: 0;
-    font: 14px/1.4 var(--body-font);
-    color: #c8bfb3;
+    font: 14px/1.45 var(--body-font);
+    color: #a39a8e;
+  }
+  .hint b {
+    color: #e8e1d6;
+    font-weight: 600;
   }
   .field {
     display: grid;
@@ -282,8 +307,8 @@
   }
   .micbox {
     display: grid;
-    gap: 6px;
-    padding: 12px 14px 4px;
+    gap: 10px;
+    padding: 12px 14px;
     border-radius: 12px;
     background: rgba(255, 255, 255, 0.035);
     border: 1px solid rgba(255, 255, 255, 0.06);
@@ -293,11 +318,44 @@
     align-items: center;
     gap: 12px;
   }
-  .micbox .seg {
+  .title {
     flex: 1;
+    font: 600 16px/1 var(--ui-font);
+    color: #e8e1d6;
   }
-  .micbox.off .knobs :global(.knob:first-child) {
-    opacity: 0.5;
+  .micbox.off .num {
+    background: #4a443d;
+  }
+  .micbox.off .title {
+    color: #8a8176;
+  }
+  .switch {
+    position: relative;
+    width: 42px;
+    height: 24px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.06);
+    cursor: pointer;
+  }
+  .switch::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #8a8176;
+    transition: transform 0.15s, background 0.15s;
+  }
+  .switch[aria-checked='true'] {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 25%, transparent);
+  }
+  .switch[aria-checked='true']::after {
+    transform: translateX(18px);
+    background: var(--accent);
   }
   .num {
     width: 26px;
@@ -310,14 +368,18 @@
     font: 700 15px/1 var(--ui-font);
   }
   .pos {
-    width: 54px;
-    text-align: right;
-    font: 13px/1 var(--body-font);
+    margin: 0;
+    font: 14px/1 var(--body-font);
     color: #a39a8e;
+  }
+  .pos b {
+    color: #e8e1d6;
+    font-weight: 600;
   }
   .knobs {
     position: relative;
-    height: 120px;
+    height: 104px;
+    margin-top: 6px;
   }
   .cab :global(.cab-label) {
     font: 600 11px/1 var(--ui-font);
@@ -326,7 +388,6 @@
     color: #a39a8e;
   }
   .load {
-    margin-top: auto;
     display: flex;
     align-items: center;
     justify-content: center;

@@ -25,14 +25,19 @@ def render_footswitch(pressed, samples=64):
     knobs.lathe("Washer", knobs.rounded([(0, -0.025), (R * 0.98, -0.025), (R * 1.0, 0.0)], 0.01), spun)
     ring = knobs.rounded([(0, -0.11), (R * 0.8, -0.11), (R * 0.84, -0.08), (R * 0.84, -0.025)], 0.015)
     knobs.lathe("Ring", ring, knurl)
-    cap_r, cap_h = R * 0.6, 0.26
-    cap = [(cap_r * math.sin(t * math.pi / 2 / 14), -0.11 - cap_h + travel + cap_h * 0.55 * (1 - math.cos(t * math.pi / 2 / 14))) for t in range(15)]
-    cap += [(cap_r, -0.11)]
-    knobs.lathe("Cap", [(0, cap[0][1])] + cap[1:], chrome)
+    # Flat-topped actuator: a turned (concentric) top and a polished chamfer. A mirror dome
+    # reflected the studio lights as two "eyes" and a "mouth".
+    top = knobs.mat_spun("Top", (0.86, 0.86, 0.88), 0.16)
+    cap_r = R * 0.58
+    side = knobs.rounded([(cap_r * 0.86, -0.38 + travel), (cap_r, -0.34 + travel), (cap_r, -0.11)], 0.02)
+    knobs.lathe("CapSide", [(0, -0.38 + travel)] + side, chrome)
+    knobs.lathe("CapTop", [(0, -0.385 + travel), (cap_r * 0.84, -0.385 + travel), (cap_r * 0.86, -0.38 + travel)], top)
+    # Centre on the cap at rest, so both states line up and the press reads as travel.
+    knobs.frame_object(r * 2, lib.LAYOUT["knobStrip"]["pad"], -0.385)
     lib.render(lib.OUT / f"footswitch-{'down' if pressed else 'up'}.png")
 
 
-TOGGLE_PX = 110  # rendered box, stage pixels (room for the lever in both positions)
+TOGGLE_PX = 140  # rendered box, stage pixels: room for the lever and its shadow in both positions
 
 
 def render_toggle(on, samples=64):
@@ -40,8 +45,10 @@ def render_toggle(on, samples=64):
     knobs.setup_object_render(TOGGLE_PX, 1.0, samples)
     chrome = _chrome()
     spun = knobs.mat_spun("Bushing", (0.82, 0.82, 0.84), 0.22)
-    knobs.lathe("Nut", [(0, -0.07), (0.15, -0.07), (0.16, -0.05), (0.16, 0.0)], chrome, segments=6)
-    knobs.lathe("Bushing", knobs.rounded([(0, -0.17), (0.075, -0.17), (0.08, -0.15), (0.08, -0.07)], 0.01), spun)
+    steel = knobs.mat_spun("Nut", (0.62, 0.62, 0.64), 0.24)
+    knobs.lathe("Washer", [(0, -0.02), (0.13, -0.02), (0.135, 0.0)], spun)
+    knobs.lathe("Nut", knobs.rounded([(0, -0.07), (0.1, -0.07), (0.11, -0.06), (0.11, -0.02)], 0.008), steel, segments=6)
+    knobs.lathe("Bushing", knobs.rounded([(0, -0.17), (0.065, -0.17), (0.07, -0.15), (0.07, -0.07)], 0.01), spun)
     # Lever pivots in the bushing and leans up (on) or down (off), towards the viewer.
     lever = bpy.data.objects.new("Lever", None)
     bpy.context.collection.objects.link(lever)
@@ -59,4 +66,5 @@ def render_toggle(on, samples=64):
     # Lever axis is +Z; rotating by θ about X sends it to (0, -sin θ, cos θ): 30° leans it up
     # towards the camera (on), 150° down towards the camera (off).
     lever.rotation_euler = (math.radians(30 if on else 150), 0, 0)
+    knobs.frame_object(TOGGLE_PX, 1.0, -0.17)  # centred on the lever's pivot
     lib.render(lib.OUT / f"toggle-{'on' if on else 'off'}.png")

@@ -14,6 +14,8 @@ export interface AmpLayout {
   labelDy: number;
   power: Point;
   jewel: Point;
+  /** Numbers printed around the knobs, e.g. [1, 12] on a tweed panel: values are shown on it. */
+  scale: [number, number];
 }
 
 export interface PedalLayout {

@@ -25,7 +25,7 @@
       class="item"
       class:current={ui.scene === item.id}
       onclick={() => (ui.scene = item.id)}
-      title={item.title}
+      title="{item.title} ({i + 1})"
       aria-label={item.title}
       aria-current={ui.scene === item.id ? 'page' : undefined}
     >

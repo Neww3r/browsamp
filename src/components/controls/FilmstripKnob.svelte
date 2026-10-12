@@ -19,9 +19,11 @@
     labelClass?: string;
     /** Show the value under the knob permanently (global controls) instead of on hover. */
     showValue?: boolean;
+    /** Overrides def.fmt, e.g. to read the value on the scale printed around the knob. */
+    format?: (v: number) => string;
   }
 
-  let { def, value, onchange, size, sheet, x, y, label = def.label, labelDy, labelClass = '', showValue = false }: Props = $props();
+  let { def, value, onchange, size, sheet, x, y, label = def.label, labelDy, labelClass = '', showValue = false, format }: Props = $props();
 
   const DRAG_PX = 240; // screen pixels for a full sweep
   let dragging = $state(false);
@@ -33,7 +35,7 @@
   let frame = $derived(Math.round(toNorm(def, value) * (frames - 1)));
   // Frames include room for the baked drop shadow around the knob.
   let box = $derived(size * pad);
-  let text = $derived(def.fmt(value));
+  let text = $derived((format ?? def.fmt)(value));
 
   function set(v: number) {
     v = Math.min(def.max, Math.max(def.min, v));
@@ -43,6 +45,9 @@
   function nudge(d: number) {
     set(fromNorm(def, toNorm(def, value) + d));
   }
+
+  /** Fine adjustment: Shift, or Cmd / Ctrl as in most audio plug-ins. */
+  const fine = (e: { shiftKey: boolean; metaKey: boolean; ctrlKey: boolean }) => e.shiftKey || e.metaKey || e.ctrlKey;
 
   let lastY = 0;
   function down(e: PointerEvent) {
@@ -58,7 +63,7 @@
     if (!dragging) return;
     const dy = lastY - e.clientY;
     lastY = e.clientY;
-    nudge((dy / DRAG_PX) * (e.shiftKey ? 0.15 : 1));
+    nudge((dy / DRAG_PX) * (fine(e) ? 0.15 : 1));
   }
   function up(e: PointerEvent) {
     const el = e.currentTarget as HTMLElement;
@@ -76,7 +81,7 @@
     // macOS turns Shift+wheel into horizontal scrolling: take whichever axis moved.
     const d = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
     if (d === 0) return;
-    nudge(-Math.sign(d) * WHEEL_STEP * (e.shiftKey ? 0.2 : 1));
+    nudge(-Math.sign(d) * WHEEL_STEP * (fine(e) ? 0.2 : 1));
   }
   function key(e: KeyboardEvent) {
     const step = e.shiftKey ? 0.005 : 0.02;
@@ -119,7 +124,7 @@
 {#if showValue}
   <div class="value" class:active={dragging || hovering} style:left="{x}px" style:top="{y + size / 2 + 8}px">{text}</div>
 {:else if dragging || hovering}
-  <div class="tip" style:left="{x}px" style:top="{y - size / 2 - 10}px">{text}</div>
+  <div class="tip" style:left="{x}px" style:top="{y - size / 2 - 10}px"><span>{def.label}</span> {text}</div>
 {/if}
 {#if label}
   <div class="label {labelClass}" style:left="{x}px" style:top="{y + (labelDy ?? size / 2 + 10)}px">{label}</div>
@@ -136,6 +141,11 @@
   }
   .knob:focus-visible {
     outline: 3px solid var(--accent);
+  }
+  .tip span {
+    color: #a39a8e;
+    font-weight: 500;
+    margin-right: 4px;
   }
   .tip {
     position: absolute;

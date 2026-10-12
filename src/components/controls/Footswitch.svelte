@@ -18,6 +18,7 @@
 
 <button
   class="fs"
+  class:pressed
   style:left="{x - half}px"
   style:top="{y - half}px"
   style:width="{half * 2}px"
@@ -40,6 +41,10 @@
     background-color: transparent;
     background-size: 100% 100%;
     cursor: pointer;
+  }
+  .fs.pressed {
+    filter: brightness(0.86);
+    transform: translateY(1.5px) scale(0.985);
   }
   .fs:focus-visible {
     outline: 3px solid var(--accent);

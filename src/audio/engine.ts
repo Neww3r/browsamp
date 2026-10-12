@@ -287,7 +287,7 @@ export class Engine {
    * Returns milliseconds, or null if nothing came back.
    */
   async measureRoundTrip(): Promise<number | null> {
-    if (!this.ctx || !this.micSource) throw new Error('Démarrez avec une entrée audio');
+    if (!this.ctx || !this.micSource) throw new Error("Allumez l'ampli avec une entrée audio pour mesurer la latence");
     const ctx = this.ctx;
     if (!this.loopback) {
       this.loopback = new AudioWorkletNode(ctx, 'browsamp-loopback', {

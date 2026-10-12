@@ -19,9 +19,11 @@
 
 <div class="right">
   {#if latencyMs !== null}
-    <div class="latency" class:warn={latencyMs > 20} title="Latence annoncée par le navigateur (entrée + traitement + sortie)">{latencyMs.toFixed(1)} ms</div>
+    <div class="latency" class:warn={latencyMs > 20} title="Latence annoncée par le navigateur (entrée + traitement + sortie)">
+      <span>Latence</span>{latencyMs.toFixed(1)} ms
+    </div>
   {/if}
-  <button class="round" class:on={ui.tuner} onclick={() => setTuner(!ui.tuner)} title="Accordeur" aria-label="Accordeur">
+  <button class="round" class:on={ui.tuner} onclick={() => setTuner(!ui.tuner)} title="Accordeur (T)" aria-label="Accordeur">
     <Icon name="tuner" size={22} />
   </button>
   <button class="round" onclick={() => (ui.settings = true)} title="Réglages audio" aria-label="Réglages audio">
@@ -68,11 +70,20 @@
     border-color: var(--accent);
   }
   .latency {
+    display: grid;
+    justify-items: end;
+    gap: 4px;
     font: 600 15px/1 var(--ui-font);
     font-variant-numeric: tabular-nums;
     color: #a8e8b4;
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
     margin-right: 4px;
+  }
+  .latency span {
+    font: 600 10px/1 var(--ui-font);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #a39a8e;
   }
   .latency.warn {
     color: #f0c060;
