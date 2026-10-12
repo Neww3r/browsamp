@@ -5,7 +5,10 @@
  */
 import { LAYOUT } from './layout';
 
+declare const __ART_REV__: string;
+
 const BASE = `${import.meta.env.BASE_URL}art/`;
+const REV = `?v=${__ART_REV__}`;
 const BG_SCALES = [1, 1.5, 2, 3];
 
 export const view = $state({
@@ -22,10 +25,10 @@ function density(): number {
 /** srcset/sizes for a scene background covering the extended canvas, plus a light preview. */
 export function background(name: string): { preview: string; src: string; srcset: string; sizes: string } {
   const w = LAYOUT.canvas.w;
-  const files = BG_SCALES.map((k) => `${BASE}${name}-${Math.round(w * k)}.webp ${Math.round(w * k)}w`);
+  const files = BG_SCALES.map((k) => `${BASE}${name}-${Math.round(w * k)}.webp${REV} ${Math.round(w * k)}w`);
   return {
-    preview: `${BASE}${name}-${w}.webp`,
-    src: `${BASE}${name}-${w * 2}.webp`,
+    preview: `${BASE}${name}-${w}.webp${REV}`,
+    src: `${BASE}${name}-${w * 2}.webp${REV}`,
     srcset: files.join(', '),
     sizes: `${Math.round(w * view.scale)}px`,
   };
@@ -35,5 +38,5 @@ export function background(name: string): { preview: string; src: string; srcset
 export function overlay(name: string): string {
   const d = density();
   const k = d <= 1.05 ? 1 : d <= 2.05 ? 2 : 3;
-  return `${BASE}${name}@${k}.webp`;
+  return `${BASE}${name}@${k}.webp${REV}`;
 }

@@ -12,7 +12,7 @@ let
     tar -xzf ${
       pkgs.fetchurl {
         url = "https://github.com/Neww3r/browsamp/releases/download/${version}/browsamp-dist.tar.gz";
-        hash = "sha256-EGX6QLZqE6IMBrK9SYeCz2tJUR/WMBMrfNKhGvxPNGw=";
+        hash = "sha256-aNjnCjb6qgtTw9LQOdGnEVyqujcB9le5EKohQWTKEQI=";
       }
     } -C $out
   '';
