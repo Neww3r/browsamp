@@ -185,7 +185,6 @@
   }
   .readout {
     font: 500 22px/1 var(--ui-font);
-    letter-spacing: 0.06em;
     color: #a39a8e;
     font-variant-numeric: tabular-nums;
   }

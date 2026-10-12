@@ -1,10 +1,9 @@
 :root {
   --accent: #e0a645;
-  --ui-font: 'Oswald', 'Arial Narrow', sans-serif;
-  --brand-font: 'Oswald', sans-serif;
-  --body-font: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --panel-font: 'Josefin Sans', sans-serif;
-  --panel-font-wide: 'Oswald', sans-serif;
+  /* Barlow: grotesque drawn from road signs and industrial markings, like gear front panels. */
+  --ui-font: 'Barlow Semi Condensed', 'Barlow', sans-serif;
+  --brand-font: 'Barlow', sans-serif;
+  --body-font: 'Barlow', ui-sans-serif, system-ui, sans-serif;
   color-scheme: dark;
   color: #f3ede4;
   background: #070606;
@@ -42,9 +41,8 @@ input {
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.05);
   color: #e8e1d6;
-  font: 500 15px/1 var(--ui-font);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font: 600 15px/1 var(--ui-font);
+  letter-spacing: 0.01em;
   cursor: pointer;
   white-space: nowrap;
 }

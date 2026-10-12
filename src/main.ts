@@ -1,10 +1,9 @@
-import '@fontsource/oswald/400.css';
-import '@fontsource/oswald/500.css';
-import '@fontsource/oswald/600.css';
-import '@fontsource/oswald/700.css';
-import '@fontsource/josefin-sans/600.css';
-import '@fontsource/yellowtail/400.css';
-import '@fontsource/kaushan-script/400.css';
+import '@fontsource/barlow/400.css';
+import '@fontsource/barlow/500.css';
+import '@fontsource/barlow/600.css';
+import '@fontsource/barlow/700.css';
+import '@fontsource/barlow-semi-condensed/500.css';
+import '@fontsource/barlow-semi-condensed/600.css';
 import './app.css';
 import { mount } from 'svelte';
 import App from './App.svelte';

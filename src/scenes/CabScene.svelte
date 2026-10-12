@@ -248,9 +248,7 @@
     border-radius: 7px;
     background: none;
     color: #a39a8e;
-    font: 500 15px/1 var(--ui-font);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    font: 600 15px/1 var(--ui-font);
     cursor: pointer;
   }
   .seg button.on {
@@ -273,8 +271,8 @@
   .field {
     display: grid;
     gap: 6px;
-    font: 500 12px/1 var(--ui-font);
-    letter-spacing: 0.14em;
+    font: 600 12px/1 var(--ui-font);
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: #8a8176;
   }
@@ -327,8 +325,8 @@
     height: 120px;
   }
   .cab :global(.cab-label) {
-    font: 500 11px/1 var(--ui-font);
-    letter-spacing: 0.14em;
+    font: 600 11px/1 var(--ui-font);
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: #a39a8e;
   }
@@ -342,9 +340,7 @@
     border-radius: 10px;
     border: 1px dashed rgba(255, 255, 255, 0.2);
     color: #d8d0c4;
-    font: 500 14px/1 var(--ui-font);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    font: 600 15px/1 var(--ui-font);
     cursor: pointer;
   }
   .load:hover {

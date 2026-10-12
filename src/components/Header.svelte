@@ -62,17 +62,16 @@
     position: absolute;
     left: 28px;
     top: 26px;
-    font: 600 26px/1 var(--brand-font);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    font: 700 27px/1 var(--brand-font);
+    letter-spacing: -0.01em;
     color: #f3ede4;
   }
   .brand::first-letter {
     color: var(--accent);
   }
   :global(.hlabel) {
-    font: 500 11px/1 var(--ui-font);
-    letter-spacing: 0.14em;
+    font: 600 11px/1 var(--ui-font);
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: #a39a8e;
   }
@@ -121,9 +120,7 @@
     border: 1px solid var(--accent);
     background: var(--accent);
     color: #1b1408;
-    font: 600 15px/1 var(--ui-font);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    font: 600 16px/1 var(--ui-font);
     cursor: pointer;
   }
   .power.on {

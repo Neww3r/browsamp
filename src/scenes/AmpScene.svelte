@@ -87,14 +87,10 @@
     border-color: color-mix(in srgb, var(--accent) 60%, transparent);
   }
   .pname {
-    font: 500 21px/1 var(--ui-font);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    font: 600 21px/1 var(--ui-font);
   }
   .pvoice {
-    font: 12px/1 var(--body-font);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    font: 500 13px/1 var(--body-font);
     color: #8a8176;
   }
 </style>

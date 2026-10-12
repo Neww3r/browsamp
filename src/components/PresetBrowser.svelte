@@ -102,8 +102,7 @@
     justify-content: space-between;
     gap: 8px;
     padding: 0 14px;
-    font: 500 19px/1 var(--ui-font);
-    letter-spacing: 0.04em;
+    font: 600 19px/1 var(--ui-font);
     color: #f3ede4;
     min-width: 0;
   }
@@ -128,8 +127,8 @@
   }
   .group {
     padding: 10px 10px 6px;
-    font: 500 12px/1 var(--ui-font);
-    letter-spacing: 0.16em;
+    font: 600 12px/1 var(--ui-font);
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: #8a8176;
   }
@@ -171,9 +170,7 @@
     padding: 16px;
   }
   .save label {
-    font: 500 13px/1 var(--ui-font);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    font: 600 14px/1 var(--ui-font);
     color: #a39a8e;
   }
   .save input {

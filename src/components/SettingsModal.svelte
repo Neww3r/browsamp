@@ -114,9 +114,7 @@
   h2,
   h3 {
     margin: 0;
-    font: 500 22px/1 var(--ui-font);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    font: 600 24px/1 var(--ui-font);
   }
   h3 {
     font-size: 15px;
@@ -136,8 +134,8 @@
   label:not(.btn) {
     display: grid;
     gap: 7px;
-    font: 500 12px/1 var(--ui-font);
-    letter-spacing: 0.14em;
+    font: 600 12px/1 var(--ui-font);
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: #8a8176;
   }
@@ -174,8 +172,8 @@
     margin: 0;
   }
   dt {
-    font: 500 11px/1 var(--ui-font);
-    letter-spacing: 0.14em;
+    font: 600 11px/1 var(--ui-font);
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: #8a8176;
   }

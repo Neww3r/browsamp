@@ -90,9 +90,7 @@
     min-width: 0;
   }
   .txt b {
-    font: 600 17px/1 var(--ui-font);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    font: 600 18px/1 var(--ui-font);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -127,9 +125,7 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
     background: rgba(255, 255, 255, 0.04);
     color: #d8d0c4;
-    font: 500 14px/1 var(--ui-font);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    font: 600 15px/1 var(--ui-font);
     cursor: pointer;
   }
   .test.on {
