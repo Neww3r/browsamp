@@ -62,9 +62,19 @@
     if (el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
     dragging = false;
   }
+  /** Wheel travel in pixels for one notch of a typical mouse wheel. */
+  const NOTCH_PX = 100;
+  /** Share of the full range per notch (a trackpad moves proportionally less per event). */
+  const PER_NOTCH = 0.03;
+
   function wheel(e: WheelEvent) {
     e.preventDefault();
-    nudge((-Math.sign(e.deltaY) / 50) * (e.shiftKey ? 0.2 : 1));
+    // macOS turns Shift+wheel into horizontal scrolling: take whichever axis moved.
+    let d = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+    if (e.deltaMode === WheelEvent.DOM_DELTA_LINE) d *= 33;
+    else if (e.deltaMode === WheelEvent.DOM_DELTA_PAGE) d *= NOTCH_PX * 3;
+    const step = Math.min(0.1, (Math.abs(d) / NOTCH_PX) * PER_NOTCH);
+    nudge(-Math.sign(d) * step * (e.shiftKey ? 0.2 : 1));
   }
   function key(e: KeyboardEvent) {
     const step = e.shiftKey ? 0.005 : 0.02;
