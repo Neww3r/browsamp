@@ -210,7 +210,11 @@ export function deleteUserPreset(name: string): void {
 export function loadLastState(): { state: RigState; preset: string | null } {
   const saved = read<{ state: unknown; preset: string | null }>(LAST_KEY);
   if (saved) return { state: normalize(saved.state), preset: saved.preset };
-  return { state: normalize(read(V1_LAST_KEY)), preset: null };
+  const v1 = read(V1_LAST_KEY);
+  if (v1) return { state: normalize(v1), preset: null };
+  // First visit: start on a named, playable sound rather than every knob at noon.
+  const first = FACTORY.find((p) => p.name === 'Glass Clean') ?? FACTORY[0];
+  return { state: normalize(first.state), preset: first.name };
 }
 
 export function saveLastState(state: RigState, preset: string | null): void {
