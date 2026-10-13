@@ -4,11 +4,13 @@
   interface Props {
     on: boolean;
     busy?: boolean;
+    /** Draw the eye to the switch (off, or on but waiting for a click to sound). */
+    hint?: boolean;
     x: number;
     y: number;
     ontoggle: () => void;
   }
-  let { on, busy = false, x, y, ontoggle }: Props = $props();
+  let { on, busy = false, hint = !on, x, y, ontoggle }: Props = $props();
 
   /** Rendered box in stage pixels (art/blender/switches.py TOGGLE_PX), centred on the pivot. */
   const BOX = 140;
@@ -27,7 +29,7 @@
 ></div>
 <button
   class="power"
-  class:hint={!on && !busy}
+  class:hint={hint && !busy}
   class:busy
   style:left="{x - HIT_W / 2}px"
   style:top="{y - HIT_H / 2}px"
@@ -35,8 +37,8 @@
   style:height="{HIT_H}px"
   role="switch"
   aria-checked={on}
-  aria-label={on ? "Éteindre l'ampli" : "Allumer l'ampli"}
-  title={on ? "Éteindre l'ampli" : "Allumer l'ampli"}
+  aria-label={on ? (hint ? 'Activer le son' : "Éteindre l'ampli") : "Allumer l'ampli"}
+  title={on ? (hint ? 'Activer le son' : "Éteindre l'ampli") : "Allumer l'ampli"}
   disabled={busy}
   onclick={ontoggle}
 ></button>
