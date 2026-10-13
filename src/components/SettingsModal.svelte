@@ -49,10 +49,6 @@
     {/if}
   </div>
 
-  <p class="status" class:on={session.running}>
-    {session.running ? (session.withInput ? 'Ampli allumé : l’entrée audio est ouverte.' : 'Ampli allumé, sans entrée audio.') : 'Ampli éteint : allumez-le avec l’interrupteur POWER sur sa façade.'}
-  </p>
-
   <section class="keys">
     <h3>Raccourcis</h3>
     <dl>
@@ -148,17 +144,6 @@
     font: 15px var(--body-font);
     text-transform: none;
     letter-spacing: 0;
-  }
-  .status {
-    margin: 0;
-    padding: 12px 14px;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.04);
-    font: 15px/1.4 var(--body-font);
-    color: #c8bfb3;
-  }
-  .status.on {
-    color: #a8e8b4;
   }
   .keys {
     display: grid;
