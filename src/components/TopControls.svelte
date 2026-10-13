@@ -4,9 +4,13 @@
   import Icon from './Icon.svelte';
   import PresetBrowser from './PresetBrowser.svelte';
 
-  let latencyMs = $derived.by(() => {
+  /** The measured round trip when there is one, else what the browser announces. */
+  let latency = $derived.by(() => {
+    if (session.measured !== null) return { ms: session.measured, partial: false, measured: true };
     const l = session.latency;
-    return l ? ((l.input ?? 0) + l.base + l.output) * 1000 : null;
+    if (!l) return null;
+    // Firefox announces the output only: the real figure is higher.
+    return { ms: ((l.input ?? 0) + (l.base ?? 0) + l.output) * 1000, partial: l.input === null || l.base === null, measured: false };
   });
 </script>
 
@@ -18,9 +22,17 @@
 <PresetBrowser />
 
 <div class="right">
-  {#if latencyMs !== null}
-    <div class="latency" class:warn={latencyMs > 20} title="Latence annoncée par le navigateur (entrée + traitement + sortie)">
-      <span>Latence</span>{latencyMs.toFixed(1)} ms
+  {#if latency}
+    <div
+      class="latency"
+      class:warn={latency.ms > 20}
+      title={latency.measured
+        ? 'Latence aller-retour mesurée avec un câble'
+        : latency.partial
+          ? "Ce navigateur n'annonce qu'une partie de la latence : mesurez l'aller-retour dans les réglages pour le vrai chiffre"
+          : 'Latence annoncée par le navigateur (entrée + traitement + sortie)'}
+    >
+      <span>{latency.measured ? 'Mesurée' : 'Latence'}</span>{latency.partial ? '≥ ' : ''}{latency.ms.toFixed(1)} ms
     </div>
   {/if}
   <button class="round" class:on={ui.tuner} onclick={() => setTuner(!ui.tuner)} title="Accordeur (T)" aria-label="Accordeur">

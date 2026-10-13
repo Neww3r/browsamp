@@ -5,7 +5,7 @@
   import Icon from './Icon.svelte';
 
   let measuring = $state(false);
-  const ms = (s: number | null | undefined) => (s == null ? '?' : (s * 1000).toFixed(1));
+  const ms = (s: number | null | undefined) => (s == null ? 'n/d' : `${(s * 1000).toFixed(1)} ms`);
 
   async function rtt() {
     measuring = true;
@@ -48,6 +48,9 @@
       </label>
     {/if}
   </div>
+  {#if !Engine.canSelectOutput()}
+    <p class="note">Ce navigateur joue le son sur la sortie de l'ordinateur : choisissez votre interface audio comme sortie par défaut dans les réglages de son du système.</p>
+  {/if}
 
   <section class="keys">
     <h3>Raccourcis</h3>
@@ -64,9 +67,10 @@
     {#if session.latency}
       <dl>
         <div><dt>Fréquence</dt><dd>{(session.latency.sampleRate / 1000).toFixed(1)} kHz</dd></div>
-        <div><dt>Entrée</dt><dd>{ms(session.latency.input)} ms</dd></div>
-        <div><dt>Traitement</dt><dd>{ms(session.latency.base)} ms</dd></div>
-        <div><dt>Sortie</dt><dd>{ms(session.latency.output)} ms</dd></div>
+        <div><dt>Entrée</dt><dd>{ms(session.latency.input)}</dd></div>
+        <div><dt>Traitement</dt><dd>{ms(session.latency.base)}</dd></div>
+        <div><dt>Sortie</dt><dd>{ms(session.latency.output)}</dd></div>
+        {#if session.measured !== null}<div><dt>Aller-retour</dt><dd>{session.measured.toFixed(1)} ms</dd></div>{/if}
       </dl>
     {:else}
       <p>Allumez l'ampli pour voir la latence.</p>
@@ -211,5 +215,10 @@
   }
   .hint {
     font-size: 13px;
+  }
+  .note {
+    margin: -6px 0 0;
+    font: 13px/1.45 var(--body-font);
+    color: #a39a8e;
   }
 </style>

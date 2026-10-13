@@ -42,6 +42,8 @@ export const session = $state({
   testing: false,
   withInput: false,
   latency: null as LatencyInfo | null,
+  /** Round trip measured with a loopback cable (ms), for the devices in use. */
+  measured: null as number | null,
   inputs: [] as MediaDeviceInfo[],
   outputs: [] as MediaDeviceInfo[],
   inputId: '',
@@ -296,6 +298,7 @@ export async function start(withInput: boolean): Promise<boolean> {
   session.starting = true;
   try {
     await engine.start({ useMic: withInput, inputId: session.inputId || undefined, outputId: session.outputId, channel: session.channel });
+    session.measured = null;
     engine.onTuner = (f) => (ui.tunerFreq = f);
     session.running = true;
     session.withInput = withInput;
@@ -363,6 +366,7 @@ export function setInputDevice(id: string): void {
 
 export function setOutputDevice(id: string): void {
   session.outputId = id;
+  session.measured = null;
   engine.setOutput(id).catch((err) => toast(`Sortie indisponible : ${err.message}`));
 }
 
@@ -377,6 +381,7 @@ export async function refreshDevices(): Promise<void> {
 export async function measureRoundTrip(): Promise<void> {
   try {
     const ms = await engine.measureRoundTrip();
+    if (ms !== null) session.measured = ms;
     toast(ms === null ? "Aucun retour détecté : reliez une sortie de l'interface à l'entrée choisie." : `Latence aller-retour mesurée : ${ms.toFixed(1)} ms`);
   } catch (e) {
     toast((e as Error).message);

@@ -22,8 +22,9 @@ export interface StartOptions {
 
 export interface LatencyInfo {
   sampleRate: number;
+  /** null: not reported by this browser (Firefox reports neither input nor processing). */
   input: number | null;
-  base: number;
+  base: number | null;
   output: number;
 }
 
@@ -277,7 +278,8 @@ export class Engine {
     return {
       sampleRate: this.ctx.sampleRate,
       input: s?.latency ?? null,
-      base: this.ctx.baseLatency ?? 0,
+      // A render quantum is never 0 s long: 0 means "not reported".
+      base: this.ctx.baseLatency || null,
       output: this.ctx.outputLatency ?? 0,
     };
   }
