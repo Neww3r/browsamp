@@ -123,7 +123,8 @@
   }
   .grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    /* minmax(0, …): a long device name must not widen its column past the dialog. */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
   }
   label:not(.btn) {
@@ -135,6 +136,9 @@
     color: #8a8176;
   }
   select {
+    width: 100%;
+    min-width: 0;
+    text-overflow: ellipsis;
     height: 42px;
     padding: 0 10px;
     border-radius: 8px;

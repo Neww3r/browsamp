@@ -6,13 +6,13 @@
 # (sha256-$(openssl dgst -sha256 -binary browsamp-dist.tar.gz | base64)), redeploy.
 { pkgs, ... }:
 let
-  version = "v3.2.4";
+  version = "v3.2.5";
   site = pkgs.runCommand "browsamp-site-${version}" { } ''
     mkdir -p $out
     tar -xzf ${
       pkgs.fetchurl {
         url = "https://github.com/Neww3r/browsamp/releases/download/${version}/browsamp-dist.tar.gz";
-        hash = "sha256-wKmCm0GpMJS+blLnwdcEoGxDh7JhMJxbhzpQme7ie8M=";
+        hash = "sha256-jVlTjGwliOMwGdq5cMSGILSyt0JmTKB8Ttu2T3i3LG4=";
       }
     } -C $out
   '';
