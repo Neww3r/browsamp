@@ -81,14 +81,8 @@ function send(def: ParamDef): void {
   engine.setParam(def, effective(def, getValue(def.key)));
 }
 
-let offHintShown = false;
-
 export function setValue(key: string, v: number): void {
   const def = PARAM[key];
-  if (!session.running && !session.starting && !offHintShown && def.target !== 'cab') {
-    offHintShown = true;
-    toast("L'ampli est éteint : actionnez son interrupteur POWER pour l'entendre.");
-  }
   if (isAmpKnob(key)) rig.amps[rig.model][key] = v;
   else rig.values[key] = v;
   send(def);
