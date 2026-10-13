@@ -50,10 +50,13 @@
   const fine = (e: { shiftKey: boolean; metaKey: boolean; ctrlKey: boolean }) => e.shiftKey || e.metaKey || e.ctrlKey;
 
   let lastY = 0;
+  /** Focused by a click: Chrome counts script focus as keyboard focus, so hide the ring ourselves. */
+  let clicked = $state(false);
   function down(e: PointerEvent) {
     const el = e.currentTarget as HTMLElement;
     el.setPointerCapture(e.pointerId);
     // preventDefault below also prevents focus: give it explicitly so arrow keys work after a click.
+    clicked = true;
     el.focus({ preventScroll: true });
     lastY = e.clientY;
     dragging = true;
@@ -120,6 +123,8 @@
   ondblclick={() => set(def.def)}
   onwheel={wheel}
   onkeydown={key}
+  onblur={() => (clicked = false)}
+  class:clicked
 ></div>
 {#if showValue}
   <div class="value" class:active={dragging || hovering} style:left="{x}px" style:top="{y + size / 2 + 8}px">{text}</div>
@@ -141,6 +146,9 @@
   }
   .knob:focus-visible {
     outline: 3px solid var(--accent);
+  }
+  .knob.clicked:focus-visible {
+    outline: none;
   }
   .tip span {
     color: #a39a8e;
