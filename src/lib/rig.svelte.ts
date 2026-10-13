@@ -41,8 +41,6 @@ export const session = $state({
   starting: false,
   testing: false,
   withInput: false,
-  /** On, but the browser holds the sound back until the page gets a click or a key press. */
-  suspended: false,
   latency: null as LatencyInfo | null,
   inputs: [] as MediaDeviceInfo[],
   outputs: [] as MediaDeviceInfo[],
@@ -304,7 +302,6 @@ export async function start(withInput: boolean): Promise<boolean> {
   session.starting = true;
   try {
     await engine.start({ useMic: withInput, inputId: session.inputId || undefined, outputId: session.outputId, channel: session.channel });
-    watchSuspension();
     engine.onTuner = (f) => (ui.tunerFreq = f);
     session.running = true;
     session.withInput = withInput;
@@ -334,16 +331,13 @@ export async function start(withInput: boolean): Promise<boolean> {
 /** The amp's power switch: opens the audio input and starts processing, or stops it. */
 export async function togglePower(): Promise<void> {
   if (session.starting) return;
-  // Already on but silent: this click is the gesture that lets the sound through.
-  if (session.running && session.suspended) void engine.ctx?.resume();
-  else if (session.running) await stop();
+  if (session.running) await stop();
   else await start(true);
 }
 
 export async function stop(): Promise<void> {
   await engine.stop();
   session.running = false;
-  setSuspended(false);
   session.testing = false;
   session.latency = null;
   ui.tunerFreq = 0;
@@ -409,40 +403,9 @@ export function toast(msg: string): void {
   toastTimer = window.setTimeout(() => (ui.toast = ''), 5000);
 }
 
-// ---------- autoplay ----------
-
-const SUSPENDED_HINT = "Cliquez n'importe où pour entendre l'ampli.";
-
-/** Browsers keep an AudioContext created without a user gesture suspended until the first one. */
-function watchSuspension(): void {
-  const ctx = engine.ctx;
-  if (!ctx) return;
-  ctx.onstatechange = () => setSuspended(ctx === engine.ctx && ctx.state === 'suspended');
-  setSuspended(ctx.state === 'suspended');
-}
-
-function wake(): void {
-  void engine.ctx?.resume();
-}
-
-function setSuspended(on: boolean): void {
-  if (on === session.suspended) return;
-  session.suspended = on;
-  for (const type of ['pointerdown', 'keydown'] as const) {
-    if (on) window.addEventListener(type, wake, { capture: true });
-    else window.removeEventListener(type, wake, { capture: true });
-  }
-  if (on) {
-    clearTimeout(toastTimer);
-    ui.toast = SUSPENDED_HINT;
-  } else if (ui.toast === SUSPENDED_HINT) {
-    ui.toast = '';
-  }
-}
-
 // ---------- boot ----------
 
-if (import.meta.env.DEV) Object.assign(window, { browsamp: { engine, rig, session, presets, view, setValue, toggleFx, moveMic, selectModel, exportPresets, importPresets, togglePower, start, stop } });
+if (import.meta.env.DEV) Object.assign(window, { browsamp: { engine, rig, session, presets, view, setValue, toggleFx, moveMic, selectModel, exportPresets, importPresets, togglePower } });
 
 // Deep links: ?scene=cab, ?amp=2 (also handy for screenshots).
 {
@@ -458,11 +421,7 @@ setInterval(() => {
 }, 1000);
 navigator.mediaDevices?.addEventListener?.('devicechange', () => void refreshDevices());
 void refreshDevices();
-// The amp starts switched on: the input opens (and the browser asks for the mic) on load,
-// once the stored IR is known so the cabinet is right from the first note.
-void loadUserIr()
-  .then((ir) => {
-    session.userIr = ir;
-    if (!ir && rig.cab.mode === 'ir') rig.cab.mode = 'mics';
-  })
-  .finally(() => void start(true));
+void loadUserIr().then((ir) => {
+  session.userIr = ir;
+  if (!ir && rig.cab.mode === 'ir') rig.cab.mode = 'mics';
+});

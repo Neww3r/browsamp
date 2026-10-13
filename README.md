@@ -12,7 +12,7 @@ npm install
 npm run dev
 ```
 
-Ouvrir l'URL affichée dans **Chrome**. L'ampli s'allume au chargement : l'entrée audio s'ouvre (le navigateur demande l'accès au micro) et, si le navigateur retient le son jusqu'à une première interaction, un clic n'importe où le libère. Son interrupteur **POWER** l'éteint et le rallume ; la roue crantée en haut à droite donne accès au choix de l'interface, du canal et de la sortie, et à la mesure de latence. En développement (`npm run dev`) seulement, un panneau « dev » en bas à gauche joue un riff synthétique ou un enregistrement DI à la place de la guitare : il n'existe pas dans le build de production.
+Ouvrir l'URL affichée dans **Chrome**. On allume l'ampli avec son interrupteur **POWER** (ce qui ouvre l'entrée audio) ; la roue crantée en haut à droite donne accès au choix de l'interface, du canal et de la sortie, et à la mesure de latence. En développement (`npm run dev`) seulement, un panneau « dev » en bas à gauche joue un riff synthétique ou un enregistrement DI à la place de la guitare : il n'existe pas dans le build de production.
 
 - `npm test` : tests du DSP (filtres, aliasing, tonestack, accordeur, stabilité, budget CPU)
 - `npm run build` : build de production dans `dist/` (servir en HTTPS ou sur `localhost`, sinon le navigateur refuse l'accès à l'entrée audio)

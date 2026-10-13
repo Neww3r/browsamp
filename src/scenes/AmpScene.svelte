@@ -36,7 +36,7 @@
       />
     {/each}
     <Led on={session.running} x={amp.jewel.x} y={amp.jewel.y} size={44} color={JEWEL[rig.model]} glow lens={17} />
-    <PowerSwitch on={session.running} hint={!session.running || session.suspended} busy={session.starting} x={amp.power.x} y={amp.power.y} ontoggle={togglePower} />
+    <PowerSwitch on={session.running} busy={session.starting} x={amp.power.x} y={amp.power.y} ontoggle={togglePower} />
   </div>
 {/key}
 
